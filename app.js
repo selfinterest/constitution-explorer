@@ -1,0 +1,95 @@
+/**
+ * Created with JetBrains PhpStorm.
+ * User: terrence
+ * Date: 7/11/13
+ * Time: 7:36 PM
+ * To change this template use File | Settings | File Templates.
+ */
+
+var requirejs = require("requirejs");
+
+/* Configure requirejs */
+requirejs.config({
+    //Pass the top-level main.js/index.js require
+    //function to requirejs so that node modules
+    //are loaded relative to the top-level JS file.
+    nodeRequire: require
+});
+
+/* Bootstraps the application */
+requirejs(["winston", "async", "http", "express.io"], function(winston, async, http, express){
+    winston.info("Bootstrapping application.");
+
+    /**
+     * Command line options and main application variable
+     */
+    var commandLn, app = express();
+    var RedisStore = require('connect-redis')(express);
+    var redis = require("redis").createClient();
+
+    async.series([
+        /**
+         * Parse command line options
+         * @param callback
+         */
+        function(callback){
+            commandLn = require("optimist").argv;
+            commandLn.port = commandLn.port || 3005;
+            callback();
+        },
+
+        /**
+         * Start and configure express
+         * @param callback
+         */
+        function(callback){
+            winston.info("Setting up express");
+            app.set('port', commandLn.port || 3005);
+            app.set('views', './views');
+            app.set('view engine', 'jade');
+            app.use(express.favicon('./public/img/favicon.png'));
+            app.use(express.logger('dev'));
+            app.use(express.bodyParser());
+            app.use(express.methodOverride());
+            app.use(require('less-middleware')({src: "./public"}));
+            app.use(express.cookieParser('watson99'));
+            app.use(require("connect-assets")({src: "./public"}));
+            app.use(express.session({
+                secret: "BLAHBLAHBLAH",
+                store: new RedisStore({host: "localhost", port: 6379, client: redis})
+            }));
+            //app.use(express.session());
+            app.use(express.csrf());
+            app.use(express.static('./public', { maxAge: 0 }));
+            app.use(app.router);
+
+            app.configure('development', function(){
+                app.use(express.errorHandler());
+            });
+
+            /* Configure routing */
+
+            app.get("")
+
+            app.get("*", function(req, res){
+                res.render("index");
+            })
+
+
+            callback();
+        },
+
+        /**
+         * Start HTTP server
+         * @param callback
+         */
+        function(callback){
+            winston.info("Starting http server on port "+commandLn.port);
+            app.http().io();
+            app.listen(commandLn.port);
+            callback();
+        }
+
+
+    ])
+});
