@@ -69,10 +69,22 @@ requirejs(["winston", "async", "http", "express.io"], function(winston, async, h
 
             /* Configure routing */
 
-            app.get("")
+            app.get("/templates/:template", function(req, res){
+                var template = req.params.template;
+                res.render("templates/"+template, function(err, html){
+                    if(!err)
+                        res.send(html)
+                    else {
+                        console.log(err);
+                        res.send(404);       //not found. This really shouldn't happen!
+                    }
+
+                })
+            });
 
             app.get("*", function(req, res){
                 res.render("index");
+                //res.send("Ok");
             })
 
 
