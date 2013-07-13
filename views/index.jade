@@ -3,15 +3,21 @@ html(lang="en", ng-app="ConstitutionExplorer")
     head
         title Constitution Explorer!
         != css("/lib/bootstrap/less/bootstrap.css")
+        script(src="/socket.io/socket.io.js")
         != js("/lib/jquery/jquery.min.js")
         != js("https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js")
         != js("/lib/angular-bootstrap/ui-bootstrap.min.js")
+        != js("/lib/underscore/underscore-min.js")
+        != js("/lib/angular-socket-io/socket.js")
+        != js("services.js")
+        != js("controllers.js")
         != js("main.js")
     body
         div.container-fluid
             div.row-fluid
                 div(ng-controller="NavCtrl").span2
                     div.well
+                        span(ng-show="!connection.on") Socket NOT connected
                         ul.nav.nav-list
                             li(nav-menu2).nav-header {{section}}
                 div(ng-view).span10

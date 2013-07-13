@@ -17,9 +17,8 @@ requirejs.config({
 });
 
 /* Bootstraps the application */
-requirejs(["winston", "async", "http", "express.io"], function(winston, async, http, express){
+requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections"], function(winston, async, http, express, db, sections){
     winston.info("Bootstrapping application.");
-
     /**
      * Command line options and main application variable
      */
@@ -59,7 +58,7 @@ requirejs(["winston", "async", "http", "express.io"], function(winston, async, h
                 store: new RedisStore({host: "localhost", port: 6379, client: redis})
             }));
             //app.use(express.session());
-            app.use(express.csrf());
+            //app.use(express.csrf());
             app.use(express.static('./public', { maxAge: 0 }));
             app.use(app.router);
 
@@ -82,10 +81,17 @@ requirejs(["winston", "async", "http", "express.io"], function(winston, async, h
                 })
             });
 
+            app.get("/api/sections", sections.get);
+            //app.get("/api/sections/:id", sections.getSubSection);
+            app.post("/api/sections/:id", sections.post);
+            app.post("/api/sections/:sectionId/:id", sections.postSubSection);
+
+
+
             app.get("*", function(req, res){
                 res.render("index");
                 //res.send("Ok");
-            })
+            });
 
 
             callback();
@@ -99,6 +105,23 @@ requirejs(["winston", "async", "http", "express.io"], function(winston, async, h
             winston.info("Starting http server on port "+commandLn.port);
             app.http().io();
             app.listen(commandLn.port);
+
+            app.io.route('connection', {
+                "get": function(req){
+                    req.io.emit("connection");
+                }
+            });
+
+            app.io.route("sections", {
+                "get": function(req){
+                    db.Models.section.find(function(err, results){
+                        console.log(results);
+                        if(err) winston.error(err);
+                        req.io.emit("sections", results);
+                    })
+                }
+            })
+
             callback();
         }
 
