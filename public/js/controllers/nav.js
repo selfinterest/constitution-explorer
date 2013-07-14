@@ -10,6 +10,21 @@ angular.module("NavController", [])
         $scope.menu = navMenu;
         $scope.connection = {on: false};
 
+
+        /* Handlers for the new section segment of the menu */
+        $scope.newSectionValid = false;
+
+        $scope.newSection = "";
+
+        $scope.validateNewSection = function(){
+            $scope.newSectionValid =  ($scope.newSection != "") && (_.indexOf(navMenu.sections, $scope.newSection) == -1);
+        }
+
+        $scope.addNewSection = function(){
+            socket.emit("sections:create", {name: $scope.newSection});
+            $scope.newSection = "";
+        }
+
         socket.on("connection", function(){
             $scope.connection = {on: true};
             console.log("Got connection");

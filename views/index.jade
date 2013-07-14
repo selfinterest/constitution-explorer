@@ -3,10 +3,12 @@ html(lang="en", ng-app="ConstitutionExplorer")
     head
         title Constitution Explorer!
         != css("/lib/bootstrap/less/bootstrap.css")
+        != css("styles.css")
         script(src="/socket.io/socket.io.js")
         != js("/lib/jquery/jquery.min.js")
-        != js("https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js")
-        != js("/lib/angular-bootstrap/ui-bootstrap.min.js")
+        //!= js("https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js")
+        != js("/lib/angular/angular.min.js")
+        != js("/lib/angular-bootstrap/ui-bootstrap-tpls.min.js")
         != js("/lib/underscore/underscore-min.js")
         != js("/lib/angular-socket-io/socket.js")
         != js("services.js")
@@ -15,10 +17,18 @@ html(lang="en", ng-app="ConstitutionExplorer")
     body
         div.container-fluid
             div.row-fluid
-                div(ng-controller="NavCtrl").span2
-                    div.well
-                        span(ng-show="!connection.on") Socket NOT connected
-                        ul.nav.nav-list
-                            li(nav-menu2).nav-header {{section}}
+                div(ng-controller="NavCtrl").span2.well
+                    span(ng-show="!connection.on") Socket NOT connected
+                    ul.nav.nav-list
+                        li(nav-menu2).nav-header
+                            span.pull-right.icons
+                                i(ng-click="menu.minimizeSection(section)").icon-minus
+                                i(ng-click="menu.deleteSection(section)").icon-remove
+                            | {{section}}
+                    div.input-append
+                        form
+                            label Add part
+                            input(type="text", ng-model="newSection", placeholder="New part", ng-change="validateNewSection()").input-small//)//, placeholder="New section", tooltip-placement="bottom", tooltip="You can add a new section here", tooltip-animation="true", tooltip-trigger="focus").input-small
+                            button(ng-click="addNewSection()", ng-disabled="!newSectionValid").btn Submit
                 div(ng-view).span10
 

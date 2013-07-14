@@ -22,15 +22,29 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
         service.items = {};
         service.sections = [];
 
+        /**
+         * Fired when all sections are received.
+         */
         socket.on("sections", function(sections){
-            console.log(sections);
             service.sections = _.pluck(sections, "name");
             _.each(sections, function(section){
                 service.items[section.name] = section.subSections;
             })
         });
 
+        /**
+         * Fired when a single new section is received.
+         */
+        socket.on("section:new", function(section){
+            service.sections.push(section.name);
+        })
+
+        /* Get the sections from the server */
         socket.emit("sections:get");
+
+        service.deleteSection = function(sectionId){
+            socket.emit("sections:delete", {name: sectionId});
+        }
 
         /*var service = {};
         service.sections = [];
@@ -61,7 +75,6 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
 
 
                     $scope.$watch("menu", function(menu){
-                        console.log("Watch firing!!");
 
                         if(!angular.isDefined(menu.sections)) return;
                         var i, $childScope, block;
@@ -69,8 +82,7 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                         //clear all sections
                         if(sectionElms.length > 0){
                             for(i = 0; i < sectionElms.length; i++){
-                                console.log("Destroying elements and scopes");
-                                console.log(sectionElms);
+
                                 sectionElms[i].el.remove();
                                 //sectionElms[i].el.find().remove();
                                 sectionElms[i].scope.items = [];
@@ -83,10 +95,9 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                             $childScope.items = $scope.menu.items[sections[i]];
                             $childScope.section = sections[i];
                             linker($childScope, function(clone){
-                                console.log($childScope);
                                 //clone.text(navMenu.sections[i]);
                                 parent.append(clone);
-                                clone.after($compile("<li ng-repeat='item in items'><a href='#'>{{ item.name }}</a></li>")($childScope));
+                                clone.after($compile("<li ng-repeat='item in items'><a href='#'>{{ item.name }}</a></li><li><input type='text'></li>")($childScope));
                                 var block = {};
                                 block.el = clone;
                                 block.scope = $childScope;
@@ -185,16 +196,12 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
             }
         }
     }])
-    .controller("IndexCtrl", ["$scope", "navMenuService", "$http", function($scope, menu, $http){
+    .controller("IndexCtrl", ["$scope", "navMenuService", "$http", "socket", function($scope, menu, $http, socket){
         $scope.test = "BLAH";
         $scope.counter = 0;
         $scope.counter2 = 0;
         $scope.addSection = function(){
-            menu.sections.push("Added section: "+$scope.counter2);
-            $http.post("/api/sections/NEW SECTION").success(function(data){
-                console.log(data);
-            })
-            $scope.counter2++;
+            socket.emit("sections:create", {name: "NEW SECTION2"});
         }
 
         $scope.addItemToNewSection = function(){

@@ -114,11 +114,25 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
 
             app.io.route("sections", {
                 "get": function(req){
-                    db.Models.section.find(function(err, results){
-                        console.log(results);
-                        if(err) winston.error(err);
-                        req.io.emit("sections", results);
-                    })
+                    db.Models.section.getAll().then(
+                        function(results){
+                            req.io.emit("sections", results);
+                        }
+                    )
+                },
+                "create": function(req){
+                    db.Models.section.create(req.data.name).then(
+                        function(section){
+                            app.io.broadcast("section:new", section);
+                        }
+                    )
+                },
+                "delete": function(req){
+                    db.Models.section.delete(req.data.name).then(
+                        function(results){
+                            app.io.broadcast("sections", results);
+                        }
+                    )
                 }
             })
 
