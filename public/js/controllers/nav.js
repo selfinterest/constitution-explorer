@@ -7,9 +7,11 @@
  */
 angular.module("NavController", [])
     .controller("NavCtrl", ["$scope", "navMenuService", "socket", "$location", function($scope, navMenu, socket, $location){
+
         $scope.$watch(function(){ return $location.search()}, function(search){
             navMenu.flags.active.section = search.s;
             navMenu.flags.active.item  = search.ss;
+
         });
 
         $scope.menu = navMenu;

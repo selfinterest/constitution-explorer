@@ -17,7 +17,7 @@ requirejs.config({
 });
 
 /* Bootstraps the application */
-requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections", "underscore"], function(winston, async, http, express, db, sections, _){
+requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections", "app/api/references", "underscore"], function(winston, async, http, express, db, sections, references, _){
     winston.info("Bootstrapping application.");
     /**
      * Command line options and main application variable
@@ -87,6 +87,7 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
             app.post("/api/sections/:sectionId/:id", sections.postSubSection);
 
 
+            app.get("/api/references/:part/:section", references.get);
 
             app.get("*", function(req, res){
                 res.render("index");

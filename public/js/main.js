@@ -6,18 +6,10 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
             .when("/", {
                 templateUrl: '/templates/index',
                 controller: "IndexCtrl",
-                reloadOnSearch: false
+                reloadOnSearch: true
             })
     }])
     .service("navMenuService", ["socket", "$http", "$location", function(socket, $http, $location){
-        /*function Item(id, items, active){
-            if(!angular.isDefined(active)){
-                active = false;
-            }
-            this.id = id;
-            this.items = items;
-            this.active = active;
-        }*/
 
 
         var service = {};
@@ -229,60 +221,6 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
 
                 }
 
-
-
-                /*return function($scope, $element, $attr){
-                    var childScope = $scope.$new();
-                    var parent = $element.parent();
-                    $element.append("<li>Test4</li>");
-                    element.append("<li>Test5</li>");
-                    for(var i = 0; i < 2; i++){
-                        linker(childScope, function(clone){
-                            console.log("Is this running?");
-                            console.log(clone);
-                            element.append(clone);
-                            clone.append("<li>Test</li>");
-                            element.append("<li>Test2</li>");
-                            $element.append("<li>Test3</li>")
-                        })
-                    }
-
-
-                }*/
-                /*for(var i = 0; i < navMenu.sections.length; i++){
-                    element.append("<li>{{ menu.sections }}</li><li ng-repeat='item in menu.items'>{{ item }}</li>");
-                }*/
             }
-        }
-    }])
-    .controller("IndexCtrl", ["$scope", "navMenuService", "$http", "socket", function($scope, menu, $http, socket){
-        $scope.test = "BLAH";
-        $scope.counter = 0;
-        $scope.counter2 = 0;
-        $scope.addSection = function(){
-            socket.emit("sections:create", {name: "NEW SECTION2"});
-        }
-
-        $scope.addItemToNewSection = function(){
-            var itemIndex = "NEW SECTION";
-
-
-            $http.post("/api/sections/"+itemIndex+"/New item").success(function(data){
-                if(!angular.isDefined(menu.items[itemIndex])){
-                    menu.items[itemIndex] = [];
-                }
-                menu.items[itemIndex].push(data.subsection);
-            })
-        }
-
-        $scope.addItem = function(){
-            console.log("Adding an item");
-            var itemIndex = "Part IV";
-            if(!angular.isDefined(menu.items[itemIndex])){
-                menu.items[itemIndex] = [];
-            }
-            //menu.items["ANOTHER section"].push("Another item");*/
-            menu.items[itemIndex].push($scope.counter);
-            $scope.counter++;
         }
     }])

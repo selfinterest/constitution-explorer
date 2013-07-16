@@ -121,6 +121,23 @@ define(["mongoose", "winston", "q"], function(mongoose, winston, Q){
         return deferred.promise;
     }
 
+    sectionSchema.statics.getReferences = function(section, subSection){
+
+        var deferred = Q.defer();
+
+        this.findOne({"name": section, "subSections.name": subSection}, {'subSections.$': 1},function(err, section){
+            if(err){
+                winston.error(err);
+                deferred.reject(new Error(err));
+            } else {
+                deferred.resolve(section.subSections[0].references);
+            }
+
+        })
+
+        return deferred.promise;
+    }
+
     /**
      * Removes an item from a section
      * @param sectionName
