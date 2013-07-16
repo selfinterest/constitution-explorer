@@ -6,7 +6,12 @@
  * To change this template use File | Settings | File Templates.
  */
 angular.module("NavController", [])
-    .controller("NavCtrl", ["$scope", "navMenuService", "socket", function($scope, navMenu, socket){
+    .controller("NavCtrl", ["$scope", "navMenuService", "socket", "$location", function($scope, navMenu, socket, $location){
+        $scope.$watch(function(){ return $location.search()}, function(search){
+            navMenu.flags.active.section = search.s;
+            navMenu.flags.active.item  = search.ss;
+        });
+
         $scope.menu = navMenu;
         $scope.connection = {on: false};
 
@@ -17,12 +22,16 @@ angular.module("NavController", [])
         $scope.newSection = "";
 
         $scope.validateNewSection = function(){
-            $scope.newSectionValid =  ($scope.newSection != "") && (_.indexOf(navMenu.sections, $scope.newSection) == -1);
+            $scope.newSectionValid =  ($scope.newSection != "") && (_.indexOf(navMenu.parts.sections, $scope.newSection) == -1);
         }
 
         $scope.addNewSection = function(){
             socket.emit("sections:create", {name: $scope.newSection});
             $scope.newSection = "";
+        }
+
+        $scope.editWhich = function(){
+            console.log("Firing");
         }
 
         socket.on("connection", function(){

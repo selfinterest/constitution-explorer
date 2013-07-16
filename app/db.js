@@ -21,18 +21,18 @@ define(["mongoose", "winston", "q"], function(mongoose, winston, Q){
     });
 
     var subSectionSchema = new Schema({
-        name: {type: String, index: {unique: true, sparse: true, dropDups: true}},
+        name: {type: String},
         references: [referenceSchema]
     });
 
     var sectionSchema = new Schema({
         name: {type: String, index: { unique: true, dropDups: true, sparse: true }},
         subSections: [subSectionSchema]
-    })
+    });
 
     sectionSchema.statics.getAll = function(){
         var deferred = Q.defer();
-        this.find(function(err, results){
+        this.find().sort({"name": "asc"}).exec(function(err, results){
             if(err){
                 winston.error(err);
                 deferred.reject(new Error(err));
@@ -73,6 +73,80 @@ define(["mongoose", "winston", "q"], function(mongoose, winston, Q){
             })
         })
 
+        return deferred.promise;
+    }
+
+    sectionSchema.statics.addItem = function(sectionName, itemName){
+        var model = this;
+        var deferred = Q.defer();
+        this.findOne({name: sectionName}, function(err, section){
+            if(err){
+                winston.error(err);
+                deferred.reject(new Error(err));
+            } else {
+                section.subSections.push({name: itemName});
+                section.save(function(err, results){
+                    if(err){
+                        winston.error(err);
+                        deferred.reject(new Error(err));
+                    } else {
+                        deferred.resolve(results);
+                    }
+                });
+            }
+        })
+
+        return deferred.promise;
+    }
+
+    sectionSchema.statics.editItem = function(sectionName, item){
+        var deferred = Q.defer();
+        this.findOne({name: sectionName}, function(err, section){
+            try {
+                section.subSections.id(item._id).name = item.name;
+                section.save(function(err, results){
+                    if(err){
+                        winston.error(err);
+                        deferred.reject(new Error(err));
+                    } else {
+                        deferred.resolve(results);
+                    }
+                })
+            } catch (error){
+                winston.error(error);
+                deferred.reject(new Error(error));
+            }
+        })
+
+        return deferred.promise;
+    }
+
+    /**
+     * Removes an item from a section
+     * @param sectionName
+     * @param item {} item.name: the name of the item, item.id: its database id.
+     */
+    sectionSchema.statics.deleteItem = function(sectionName, item){
+        var deferred = Q.defer();
+        //console.log(arguments);
+        this.findOne({name: sectionName}, function(err, section){
+
+            try {
+                section.subSections.id(item._id).remove();
+                section.save(function(err, results){
+                    if(err){
+                        winston.error(err);
+                        deferred.reject(new Error(err));
+                    } else {
+                        deferred.resolve(results);
+                    }
+                })
+            } catch (error){    //this probably just means the item was already removed
+                winston.error(error);
+                deferred.reject(new Error(error));
+            }
+
+        })
         return deferred.promise;
     }
 

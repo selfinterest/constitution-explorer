@@ -6,13 +6,14 @@ html(lang="en", ng-app="ConstitutionExplorer")
         != css("styles.css")
         script(src="/socket.io/socket.io.js")
         != js("/lib/jquery/jquery.min.js")
-        //!= js("https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js")
-        != js("/lib/angular/angular.min.js")
+        != js("https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js")
+        //!= js("/lib/angular/angular.min.js")
         != js("/lib/angular-bootstrap/ui-bootstrap-tpls.min.js")
         != js("/lib/underscore/underscore-min.js")
         != js("/lib/angular-socket-io/socket.js")
         != js("services.js")
         != js("controllers.js")
+        != js("filters.js")
         != js("main.js")
     body
         div.container-fluid
@@ -24,7 +25,7 @@ html(lang="en", ng-app="ConstitutionExplorer")
                             span.pull-right.icons
                                 i(ng-click="menu.minimizeSection(section)").icon-minus
                                 i(ng-click="menu.deleteSection(section)").icon-remove
-                            | {{section}}
+                            | {{section.name}}
                     div.input-append
                         form
                             label Add part

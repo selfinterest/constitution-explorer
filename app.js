@@ -17,7 +17,7 @@ requirejs.config({
 });
 
 /* Bootstraps the application */
-requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections"], function(winston, async, http, express, db, sections){
+requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections", "underscore"], function(winston, async, http, express, db, sections, _){
     winston.info("Bootstrapping application.");
     /**
      * Command line options and main application variable
@@ -112,10 +112,39 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                 }
             });
 
+            app.io.route("items", {
+                "create": function(req){
+                    //req.data.section = the name of the section, req.data.item = the name of the item to add
+                    db.Models.section.addItem(req.data.section, req.data.item).then(
+                        function(item){
+                            app.io.broadcast("item:new", item);
+                        }
+                    );
+                },
+                "delete": function(req){
+                    db.Models.section.deleteItem(req.data.section, req.data.item).then(
+                        function(section){
+                            app.io.broadcast("section:new", section);
+                        }
+                    )
+                },
+                "edit": function(req){
+                    db.Models.section.editItem(req.data.section, req.data.item).then(
+                        function(section){
+                            app.io.broadcast("section:new", section);
+                        }
+                    )
+                }
+            })
             app.io.route("sections", {
                 "get": function(req){
                     db.Models.section.getAll().then(
                         function(results){
+                            //sort the results
+                            _.each(results, function(section){
+                                section.subSections = _.sortBy(section.subSections, "name");
+                            });
+
                             req.io.emit("sections", results);
                         }
                     )
