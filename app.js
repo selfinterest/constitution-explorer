@@ -166,6 +166,17 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                         }
                     )
                 }
+            });
+
+            app.io.route("references", {
+                "get": function(req){
+                    var sectionName = req.data.section;
+                    var itemName = req.data.item;
+                    var eventName = "references" + ":" + sectionName + ":" + itemName;
+                    db.Models.section.getReferences(sectionName, itemName).then(function(results){
+                        req.io.emit(eventName, {results: results});
+                    })
+                }
             })
 
             callback();

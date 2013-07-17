@@ -17,6 +17,7 @@ define(["mongoose", "winston", "q"], function(mongoose, winston, Q){
 
     var referenceSchema = new Schema({
         filename: {type: String},
+        title: {type: String},
         pages: [String]
     });
 
@@ -143,12 +144,12 @@ define(["mongoose", "winston", "q"], function(mongoose, winston, Q){
         return deferred.promise;
     }
 
-    sectionSchema.statics.putReference = function(section, subSection, filename){
+    sectionSchema.statics.putReference = function(section, subSection, filename, title){
         var deferred = Q.defer();
 
         this.update({"name": section, "subSections.name": subSection},
             {"$addToSet":                                       //$addToSet = add to array unless already there
-            {"subSections.$.references": {filename: filename}}
+            {"subSections.$.references": {filename: filename, title: title}}
             }, {upsert: true}, function(err, numAffected, raw){
             if(err) winston.error(err);
             deferred.resolve(raw);

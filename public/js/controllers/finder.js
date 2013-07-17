@@ -1,5 +1,5 @@
 angular.module("FinderController", [])
-    .controller("FinderCtrl", ["$scope", "$http", "navMenuService", function($scope, $http, menu){
+    .controller("FinderCtrl", ["$scope", "$http", "navMenuService", "references", function($scope, $http, menu, references){
         $scope.search = {};
         $scope.search.results = [];
 
@@ -21,6 +21,9 @@ angular.module("FinderController", [])
                         $scope.pagination.currentPage = 1;
                         $scope.pagination.maxSize = 5;
                     }
+
+
+
                 }
             })
         }
@@ -28,7 +31,7 @@ angular.module("FinderController", [])
         $scope.addReference = function(hit){
             var section = menu.flags.active.section;
             var item = menu.flags.active.item;
-            $http.put("/api/references/"+section + "/" + item + "/" + hit._source.filename).success(function(data){
+            $http.put("/api/references/"+section + "/" + item + "/" + hit._source.filename, {title: hit._source.title}).success(function(data){
 
             })
         }

@@ -8,8 +8,6 @@
 angular.module("IndexController", [])
     .controller("IndexCtrl", ["$scope", "navMenuService", "$http", "socket", function($scope, menu, $http, socket){
 
-        console.log("Reloaded");
-
 
         $scope.test = menu.flags.active.section;
         $scope.counter = 0;

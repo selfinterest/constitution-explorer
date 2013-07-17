@@ -41,7 +41,7 @@ angular.module("NavController", [])
 
         socket.on("connection", function(){
             $scope.connection = {on: true};
-            console.log("Got connection");
+            //console.log("Got connection");
         });
 
         socket.emit("connection:get");

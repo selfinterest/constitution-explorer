@@ -11,7 +11,9 @@ div.span12
                     th
                     th Title
             tbody
-                tr(ng-repeat="hit in search.results.hits.hits")
-                    td.icons: i(ng-click="addReference(hit)").icon-plus
-                    td {{hit._source.title}}
+                tr(ng-repeat="hit in search.results.hits.hits | markReferences")
+                    td.icons
+                        i(ng-click="addReference(hit)", ng-show="!hit.referenced").icon-plus
+                        i(ng-show="hit.referenced").icon-ok
+                    td: a(ng-href="http://www.originaldocuments.ca/documents/{{hit._source.filename}}", target="_blank") {{hit._source.title}}
                 tr: td(colspan="2"): pagination(num-pages="pagination.numPages", max-size="pagination.maxSize", current-page="pagination.currentPage", on-select-page="search.perform(page, false)").pull-right
