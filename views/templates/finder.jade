@@ -1,6 +1,17 @@
 div.span12
     h3 Finder
     form.form-search
-        input(type="text", ng-model='searchStr').search-query.span5
-        button( ng-click="search()").btn Submit
-
+        input(type="text", ng-model='search.str').search-query.span5
+        button( type="submit", ng-click="search.perform()").btn Submit
+    div(ng-show='search.results')
+        table.table.table-bordered.table-striped.table-hover
+            caption {{search.results.hits.total}} results.
+            thead
+                tr
+                    th
+                    th Title
+            tbody
+                tr(ng-repeat="hit in search.results.hits.hits")
+                    td.icons: i(ng-click="addReference(hit)").icon-plus
+                    td {{hit._source.title}}
+                tr: td(colspan="2"): pagination(num-pages="pagination.numPages", max-size="pagination.maxSize", current-page="pagination.currentPage", on-select-page="search.perform(page, false)").pull-right

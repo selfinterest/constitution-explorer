@@ -17,7 +17,7 @@ define(["mongoose", "winston", "q"], function(mongoose, winston, Q){
 
     var referenceSchema = new Schema({
         filename: {type: String},
-        pages: String
+        pages: [String]
     });
 
     var subSectionSchema = new Schema({
@@ -32,7 +32,7 @@ define(["mongoose", "winston", "q"], function(mongoose, winston, Q){
 
     sectionSchema.statics.getAll = function(){
         var deferred = Q.defer();
-        this.find().sort({"name": "asc"}).exec(function(err, results){
+        this.find().sort({"name": "asc"}).select({"subSections.references": false}).exec(function(err, results){
             if(err){
                 winston.error(err);
                 deferred.reject(new Error(err));
@@ -125,15 +125,51 @@ define(["mongoose", "winston", "q"], function(mongoose, winston, Q){
 
         var deferred = Q.defer();
 
-        this.findOne({"name": section, "subSections.name": subSection}, {'subSections.$': 1},function(err, section){
+        this.findOne({"name": section, "subSections.name": subSection}, {'subSections.$': 1}, function(err, section){
             if(err){
                 winston.error(err);
                 deferred.reject(new Error(err));
             } else {
-                deferred.resolve(section.subSections[0].references);
+                if(!section){
+                    deferred.resolve([]);
+                } else {
+                    deferred.resolve(section.subSections[0].references);
+                }
+
             }
 
         })
+
+        return deferred.promise;
+    }
+
+    sectionSchema.statics.putReference = function(section, subSection, filename){
+        var deferred = Q.defer();
+
+        this.update({"name": section, "subSections.name": subSection},
+            {"$addToSet":                                       //$addToSet = add to array unless already there
+            {"subSections.$.references": {filename: filename}}
+            }, {upsert: true}, function(err, numAffected, raw){
+            if(err) winston.error(err);
+            deferred.resolve(raw);
+        });
+        /*this.findOne({"name": section, "subSections.name": subSection}, {'subSections.$': 1}, function(err, section){
+            if(err){
+                winston.error(err);
+                deferred.reject(new Error(err));
+            } else {        //add the reference
+                console.log(section);
+                section.subSections[0].references.push({filename: filename});
+                section.save(function(err, result){
+                    if(err){
+                        winston.error(err);
+                        deferred.reject(new Error(err));
+                    } else {
+                        deferred.resolve({filename: filename, section: result});
+                    }
+                })
+            }
+        })*/
 
         return deferred.promise;
     }

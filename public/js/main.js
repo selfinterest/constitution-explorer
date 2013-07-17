@@ -12,6 +12,23 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
     .service("navMenuService", ["socket", "$http", "$location", function(socket, $http, $location){
 
 
+        /**
+         * Tries to keep the menu and URL in sync with the application state.
+         * Example: if an item is deleted, the menu and the URL may have to change.
+         */
+        function checkMenu(){
+            var locationItem = $location.search().ss;
+            var locationSection = $location.search().s;
+            var item = _.findWhere(service.parts.items[locationSection], {name: locationItem });
+
+            if(!item){
+                $location.replace();
+                service.flags.active.section = null;
+                service.flags.active.item = null;
+                $location.search("s", null);
+                $location.search("ss", null);
+            }
+        }
         var service = {};
         service.parts = {};
         service.parts.items = {};
@@ -42,18 +59,46 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                 });
                 //service.items[section.name] = section.subSections;
             })
+
+            var locationSection = $location.search().s;
+            var locationSubSection = $location.search().ss;
+            var sectionIndex = _.indexOf(service.parts.sections, locationSection );
+            if(sectionIndex == -1){
+                $location.replace();
+                service.flags.active.section = null;
+                service.flags.active.item = null;
+                $location.search("s", null);
+                $location.search("ss", null);
+                return;
+            }          //The section no longer exists, probably because it was deleted
+
+            var locationItem = $location.search().ss;
+            //var locationSection = $location.search().s;
+            var item = _.findWhere(service.parts.items[locationSection], {name: locationItem });
+
+            if(!item){
+                $location.replace();
+                service.flags.active.section = null;
+                service.flags.active.item = null;
+                $location.search("s", null);
+                $location.search("ss", null);
+            }
+
         });
 
         /**
          * Fired when a single new section is received, or a replacement section if one is edited
          */
         socket.on("section:new", function(section){
+
             var index = _.indexOf(service.parts.sections, section.name);
             if(index < 0){            //section did not already exist, so just add it
                 service.parts.sections.push(section.name);
             } else {                  //this section already exists, so replace it
                 service.parts.sections[index] = section.name;
                 service.parts.items[service.parts.sections[index]] = section.subSections;
+                checkMenu();
+
             }
         })
 
