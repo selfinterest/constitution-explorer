@@ -1,0 +1,38 @@
+{
+  "name": "ConstitutionExplorer",
+  "version": "0.0.1",
+  "description": "Explore the constitution blah blah",
+  "main": "app.js",
+  "dependencies": {
+    "async": "~0.2.9",
+    "connect": "~2.8.4",
+    "connect-assets": "~2.5.0",
+    "connect-redis": "~1.4.5",
+    "cookie": "~0.1.0",
+    "express.io": "~1.1.12",
+    "jade": "~0.32.0",
+    "less": "~1.4.1",
+    "less-middleware": "~0.1.12",
+    "mongoose": "~3.6.14",
+    "optimist": "~0.6.0",
+    "q": "~0.9.6",
+    "redis": "~0.8.4",
+    "requirejs": "~2.1.8",
+    "rest": "~0.9.3",
+    "underscore": "~1.5.1",
+    "winston": "~0.7.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/selfinterest/constitution-explorer.git"
+  },
+  "author": "Terrence C. Watson",
+  "license": "BSD",
+  "bugs": {
+    "url": "https://github.com/selfinterest/constitution-explorer/issues"
+  }
+}
