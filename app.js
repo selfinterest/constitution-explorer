@@ -176,6 +176,20 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                     db.Models.section.getReferences(sectionName, itemName).then(function(results){
                         req.io.emit(eventName, {results: results});
                     })
+                },
+                "put": function(req){
+                    var sectionName = req.data.section;
+                    var itemName = req.data.item;
+                    var title = req.data.reference.title;
+                    var filename = req.data.reference.filename;
+                    var eventName = "references" + ":" + sectionName + ":" + itemName;
+                    db.Models.section.putReference(sectionName, itemName, filename, title).then(function(results){
+                        //Look up the all the references and send them back
+                        db.Models.section.getReferences(sectionName, itemName).then(function(results){
+                            app.io.broadcast(eventName, {results: results});
+                        });
+                        //app.io.broadcast(eventName)
+                    });
                 }
             })
 

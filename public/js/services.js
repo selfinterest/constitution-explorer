@@ -12,6 +12,10 @@ angular.module("services", [])
             //return $http.get("/api/references/"+sectionName+"/"+itemName);
         }
 
+        service.add = function(sectionName, itemName, reference){
+            socket.emit("references:put", {section: sectionName, item: itemName, reference: reference});
+        }
+
         return service;
 
     }])

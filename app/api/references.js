@@ -30,7 +30,10 @@ define(["app/db", "underscore", "async", "q"], function(db, _, async, Q){
             var filename = req.params.filename;
             var title = req.body.title;
             db.Models.section.putReference(section, subSection, filename, title).then(function(results){
-                res.send(results);
+                //Look up the reference we JUST ADDED because of stupid reasons
+                db.Models.section.findReferenceByFilename(section, subSection, filename).then(function(results){
+
+                })
             });
         }
     }

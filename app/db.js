@@ -175,6 +175,7 @@ define(["mongoose", "winston", "q"], function(mongoose, winston, Q){
         return deferred.promise;
     }
 
+
     /**
      * Removes an item from a section
      * @param sectionName

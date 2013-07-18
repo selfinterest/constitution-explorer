@@ -31,8 +31,9 @@ angular.module("FinderController", [])
         $scope.addReference = function(hit){
             var section = menu.flags.active.section;
             var item = menu.flags.active.item;
-            $http.put("/api/references/"+section + "/" + item + "/" + hit._source.filename, {title: hit._source.title}).success(function(data){
+            references.add(section, item, hit._source);
+            /*$http.put("/api/references/"+section + "/" + item + "/" + hit._source.filename, {title: hit._source.title}).success(function(data){
 
-            })
+            })*/
         }
     }])
