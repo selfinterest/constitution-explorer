@@ -4,6 +4,8 @@ div(ng-show='section')
     div(ng-show='references.items.length > 0')
         h3 References
         table.table
+            thead
+                
             tr(ng-repeat='item in references.items')
                 td {{item.title}}
 div(ng-show='!section')

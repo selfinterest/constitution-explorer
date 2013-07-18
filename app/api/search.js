@@ -13,7 +13,23 @@ define(["q", "winston"], function(Q, winston){
     function performSearch(str, page){
         var size = 10;
         var from = page * size;
-        var request = {path: url + "/_search?q="+str+"from="+from+"&size="+size, method: 'GET'};
+
+        //Form a request body
+
+        var request = {path: url + "/_search", method: "POST"};
+        request.entity = JSON.stringify({
+            query: {
+                query_string: {
+                    query: str,
+                    "use_dis_max":true,
+                    "defaultOperator":"AND"
+                },
+                size: size,
+                from: from,
+                sort: "title.raw"
+            }
+        })
+        //var request = {path: url + "/_search?q="+str+"from="+from+"&size="+size, method: 'GET'};
 
         return client(request);
     }
@@ -28,6 +44,7 @@ define(["q", "winston"], function(Q, winston){
                     if(response.status.code == 200){
                         res.send({results: JSON.parse(response.entity), ok: true});
                     } else {
+                        console.log(response);
                         res.send({ok: false})
                     }
                 },

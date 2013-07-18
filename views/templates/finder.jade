@@ -10,10 +10,12 @@ div.span12
                 tr
                     th
                     th Title
+                    th Date
             tbody
                 tr(ng-repeat="hit in search.results.hits.hits | markReferences")
-                    td.icons
+                    td.icons.span1
                         i(ng-click="addReference(hit)", ng-show="!hit.referenced").icon-plus
                         i(ng-show="hit.referenced").icon-ok
-                    td: a(ng-href="http://www.originaldocuments.ca/documents/{{hit._source.filename}}", target="_blank") {{hit._source.title}}
+                    td.span9: a(ng-href="http://www.originaldocuments.ca/documents/{{hit._source.filename}}", target="_blank") {{hit._source.title}}
+                    td.span2 {{hit._source.date}}
                 tr: td(colspan="2"): pagination(num-pages="pagination.numPages", max-size="pagination.maxSize", current-page="pagination.currentPage", on-select-page="search.perform(page, false)").pull-right
