@@ -36,7 +36,7 @@ angular.module("NavController", [])
         }
 
         $scope.editWhich = function(){
-            console.log("Firing");
+            //console.log("Firing");
         }
 
         socket.on("connection", function(){

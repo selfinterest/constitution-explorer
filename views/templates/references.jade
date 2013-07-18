@@ -3,10 +3,24 @@ div(ng-show='section')
     div(ng-show='references.items.length < 1'): h3 No references yet
     div(ng-show='references.items.length > 0')
         h3 References
-        table.table
+        table.table.table-bordered.table-striped.table-hover
             thead
-                
-            tr(ng-repeat='item in references.items')
-                td {{item.title}}
+                th
+                th Title
+                th Lines
+                th
+            tr(ng-repeat='item in references.items | orderBy:"title"')
+                td.icons.span1: i(ng-click='references.remove(part, section, item)').icon-remove
+                td.span9 {{item.title}}
+                td
+                    div(ng-show="!item.editing") {{item.lines}}
+                    form(ng-show="item.editing").input-append
+                        input(type="text", ng-model="item.lines")
+                        button(ng-click="references.editLine(part, section, item, true)").btn Submit
+                td.icons.span1: i(ng-click="references.editLine(part, section, item, false)").icon-pencil
+                    //i(ng-repeat='line in item.pages').icon-remove {{line}}
+                    //form.input-append
+                    //    input(type="text", ng-model="item.line").span4
+                    //    button(ng-click="references.addLine(part, section, item)").btn Submit
 div(ng-show='!section')
     div: h3 Select a section to see references

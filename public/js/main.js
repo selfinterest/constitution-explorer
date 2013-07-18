@@ -247,10 +247,10 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
 
                     $scope.menu = navMenu;
                     $scope.$watchCollection("menu.items", function(items){
-                        console.log("Item watch firing");
+                        //console.log("Item watch firing");
                     })
                     $scope.$watchCollection("menu.sections", function(sections){
-                        console.log("Watch firing");
+                        //console.log("Watch firing");
                         //Remove all elements
                         if(sectionElm.length > 0){
                             for(var i = 0; i < sectionElm.length; i++){

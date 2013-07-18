@@ -16,6 +16,26 @@ angular.module("services", [])
             socket.emit("references:put", {section: sectionName, item: itemName, reference: reference});
         }
 
+        service.remove = function(sectionName, itemName, reference){
+            socket.emit("references:delete", {section: sectionName, item: itemName, reference: reference});
+        }
+
+        //NO LONGER USED
+        service.addLine = function(sectionName, itemName, reference){
+            socket.emit("references:post", {section: sectionName, item: itemName, reference: reference});
+        }
+
+        service.editLine = function(sectionName, itemName, reference, submit){
+            if(!angular.isDefined(submit)) submit = false;
+            reference.editing = !submit;
+            if(submit){         //submit the edit
+                socket.emit("references:post", {section: sectionName, item: itemName, reference: reference});
+            }
+        }
+
+
+
+
         return service;
 
     }])

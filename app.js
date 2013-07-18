@@ -190,7 +190,33 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                         });
                         //app.io.broadcast(eventName)
                     });
+                },
+                "delete": function(req){
+                    var sectionName = req.data.section;
+                    var itemName = req.data.item;
+                    var filename = req.data.reference.filename;
+                    var eventName = "references:" + sectionName + ":" + itemName;
+                    db.Models.section.removeReference(sectionName, itemName, filename).then(function(results){
+                        db.Models.section.getReferences(sectionName, itemName).then(function(results){
+                            app.io.broadcast(eventName, {results: results});
+                        })
+                    })
+                },
+                "post": function(req){
+                    var sectionName = req.data.section;
+                    var itemName = req.data.item;
+                    var filename = req.data.reference.filename;
+                    var line = req.data.reference.line;
+                    var reference = req.data.reference;
+                    var eventName = "references:" + sectionName + ":" + itemName;
+                    db.Models.section.editLine(sectionName, itemName, filename, reference).then(function(results){
+                        console.log(results);
+                        db.Models.section.getReferences(sectionName, itemName).then(function(results){
+                            app.io.broadcast(eventName, {results: results});
+                        })
+                    })
                 }
+
             })
 
             callback();

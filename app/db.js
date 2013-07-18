@@ -5,7 +5,7 @@
  * Time: 1:19 PM
  * To change this template use File | Settings | File Templates.
  */
-define(["mongoose", "winston", "q"], function(mongoose, winston, Q){
+define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q, _){
     mongoose.connect("mongodb://localhost/originaldocuments");
     var Schema = mongoose.Schema;
 
@@ -18,7 +18,7 @@ define(["mongoose", "winston", "q"], function(mongoose, winston, Q){
     var referenceSchema = new Schema({
         filename: {type: String},
         title: {type: String},
-        pages: [String]
+        lines: {type: String}
     });
 
     var subSectionSchema = new Schema({
@@ -144,36 +144,95 @@ define(["mongoose", "winston", "q"], function(mongoose, winston, Q){
         return deferred.promise;
     }
 
-    sectionSchema.statics.putReference = function(section, subSection, filename, title){
+    sectionSchema.statics.putReference = function(section, subSection, filename, title, lines){
         var deferred = Q.defer();
 
+        if(!lines) lines = ""
         this.update({"name": section, "subSections.name": subSection},
             {"$addToSet":                                       //$addToSet = add to array unless already there
-            {"subSections.$.references": {filename: filename, title: title}}
+            {"subSections.$.references": {filename: filename, title: title, lines: lines}}
             }, {upsert: true}, function(err, numAffected, raw){
             if(err) winston.error(err);
             deferred.resolve(raw);
         });
-        /*this.findOne({"name": section, "subSections.name": subSection}, {'subSections.$': 1}, function(err, section){
-            if(err){
-                winston.error(err);
-                deferred.reject(new Error(err));
-            } else {        //add the reference
-                console.log(section);
-                section.subSections[0].references.push({filename: filename});
-                section.save(function(err, result){
-                    if(err){
-                        winston.error(err);
-                        deferred.reject(new Error(err));
-                    } else {
-                        deferred.resolve({filename: filename, section: result});
-                    }
-                })
-            }
-        })*/
 
         return deferred.promise;
     }
+
+    sectionSchema.statics.removeReference = function(section, subSection, filename){
+        var deferred = Q.defer();
+        this.update({"name": section, "subSections.name": subSection},
+            {"$pull":
+            {"subSections.$.references": {filename: filename}}
+            }, function(err, numAffected, raw){
+                if(err) winston.error(err);
+                deferred.resolve(raw);
+            }
+        )
+
+        return deferred.promise;
+    }
+
+    sectionSchema.statics.editLine = function(section, subSection, filename, reference){
+        var deferred = Q.defer();
+        var model = this;
+        /* Sigh. We have to do it this way. Remove the old reference. Add a totally new one. */
+        model.removeReference(section, subSection, reference.filename)
+            .then(function(){
+                model.putReference(section, subSection, reference.filename, reference.title, reference.lines)
+                    .then(function(err, numAffected, raw){
+                        deferred.resolve(raw);
+                    })
+            })
+
+        /*this.update({"name": section, "subSections.name": subSection},
+            {"$pull":
+                {"subSections.$.references": {filename: filename}}
+        }, function(){
+
+        });*/
+        //console.log(arguments);
+        /*this.findOne({"name": section, "subSections.name": subSection, "subSections.references.filename": filename}, {'subSections.references.$': 1}, function(err, section){
+        //this.findOne({name: section, "subSections.name": subSection, "subSections.$.references": {"$elemMatch": {filename: filename}}}, function(err, section){
+            /* At this point, section.subSections[0] is the parent document of the references document we need */
+
+
+         //   console.log(section.subSections[0].references);
+
+            //console.log(section);
+            //console.log(section.subSections[0].references);
+            /*_.each(section.subSections[0].references, function(ref, index){
+                if(ref.filename == filename){
+                    section.subSections[0].references[index].lines = reference.lines;
+                }
+            })
+            section.save( function(section){
+                deferred.resolve(section)
+            })*/
+            //console.log(section.subSections.references.id(reference._id));
+        //})
+        return deferred.promise;
+    }
+
+    /*sectionSchema.statics.addLine = function(section, subSection, filename, line){
+        var deferred = Q.defer();
+        //The positional operator can't do deep enough for us. We need to do this a slow, stupid way
+        this.findOne({"name": section, "subSections.name": subSection, "subSections.references.filename": filename}, function(section){
+            section.
+        });
+
+
+        this.update({"name": section, "subSections.name": subSection, "subSections.references.filename": filename},
+            {"$addToSet":
+                {"subSections.$.references.$.pages": line}
+            }, function(err, numAffected, raw){
+                if(err) winston.error(err);
+                deferred.resolve(raw)
+            });
+
+        return deferred.promise;
+    }*/
+
 
 
     /**

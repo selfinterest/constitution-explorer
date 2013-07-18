@@ -29,7 +29,7 @@ angular.module("IndexController", [])
         }
 
         $scope.addItem = function(){
-            console.log("Adding an item");
+            //console.log("Adding an item");
             var itemIndex = "Part IV";
             if(!angular.isDefined(menu.items[itemIndex])){
                 menu.items[itemIndex] = [];
