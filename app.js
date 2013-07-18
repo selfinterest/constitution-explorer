@@ -66,7 +66,16 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                 app.use(express.errorHandler());
             });
 
+            /* Configure authorization */
+
+            var auth = require("express.io").basicAuth(function(user, pass, callback) {
+                var result = (user === 'charter12' && pass === 'scottreid!');
+                callback(null /* error */, result);
+            });
+
             /* Configure routing */
+
+            app.all("*", auth);
 
             app.get("/templates/:template", function(req, res){
                 var template = req.params.template;
@@ -107,6 +116,35 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
         function(callback){
             winston.info("Starting http server on port "+commandLn.port);
             app.http().io();
+
+            app.io.set("authorization", function(handshakeData, accept){
+                console.log(arguments);
+                var cookie = require("cookie");
+                var connect = require("connect");
+                if (handshakeData.headers.cookie) {
+
+                    handshakeData.cookie = cookie.parse(handshakeData.headers.cookie);
+                    try {
+
+                        handshakeData.sessionID = connect.utils.parseSignedCookie(handshakeData.cookie['connect.sid'], 'watson99');
+
+                        if (handshakeData.cookie['connect.sid'] == handshakeData.sessionID) {
+                            return accept('Cookie is invalid.', false);
+                        }
+                    } catch (e){
+                        console.log(handshakeData.cookie);
+                        console.log(e);
+                        return accept("Error occurred in authorization", false);
+                    }
+
+
+                } else {
+                    return accept('No cookie transmitted.', false);
+                }
+
+                accept(null, true);
+            });
+
             app.listen(commandLn.port);
 
             app.io.route('connection', {
