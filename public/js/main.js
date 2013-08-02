@@ -44,9 +44,6 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
          * Fired when all sections are received.
          */
         socket.on("sections", function(sections){
-            /*var paths = {};
-            paths.section = $location.search().s;
-            paths.subSection = $location.search().ss;*/
 
             //clear out old items and sections
             service.parts.sections = [];
@@ -58,7 +55,7 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                     service.parts.items[section.name].push({name: subSection.name, _id: subSection._id});
                 });
                 //service.items[section.name] = section.subSections;
-            })
+            });
 
             var locationSection = $location.search().s;
             var locationSubSection = $location.search().ss;
@@ -103,8 +100,21 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
         })
 
         //Fires when a new item is received
-        socket.on("item:new", function(section){
-            service.parts.items[section.name] = section.subSections;
+        //Obj is: {section: the name of the section, item: the new item added}
+        socket.on("item:new", function(obj){
+            if(!angular.isDefined(service.parts.items[obj.section])) service.parts.items[obj.section] = [];
+
+            var itemToUpdate = _.findWhere(service.parts.items[obj.section], {_id: obj.item._id});
+
+            if(!itemToUpdate) {
+                service.parts.items[obj.section].push(obj.item);    //new item
+            } else {  //old item. Update it.
+                var index = _.indexOf(service.parts.items[obj.section], itemToUpdate);
+                service.parts.items[obj.section][index] = obj.item;
+                //$location.search("ss", obj.item.name);
+            }
+            checkMenu();
+
         });
 
         /* Get the sections from the server */
@@ -184,7 +194,7 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                             $childScope.items = angular.copy($scope.menu.parts.items[sections[i]]);     //copy menu section
 
                             $childScope.section = {name: sections[i], newItem: ""};
-
+                            
                             linker($childScope, function(clone){
                                 //clone.text(navMenu.sections[i]);
                                 parent.append(clone);
@@ -205,67 +215,5 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                 }
 
             }
-        }
-    }])
-    .directive("navMenu", ["navMenuService", function(navMenu){
-        return {
-            restrict: "A",
-            compile: function(element, attr, linker){
-                var sectionElm = [], itemElm = {};
-
-                return function($scope, $element, $attr){
-                    /**
-                     * Resets all the items in a section, removing their DOM nodes
-                     * @param sections
-                     * @param i
-                     */
-                    function resetSection(sections, i){
-                        sectionElm[i].remove();
-                        if(angular.isDefined(itemElm[sections[i]])){
-                            for(var p = 0; p < itemElm[sections[i]].length; p++){
-                                itemElm[sections[i]][p].remove();
-                            }
-                        }
-                        itemElm[sections[i]] = [];
-                    }
-
-                    function buildSection(sections, i){
-                        var el = angular.element("<li class='nav-header'>"+sections[i]+"</li>");
-                        $element.append(el);
-                        sectionElm.push(el);
-                        if(angular.isDefined(navMenu.items[sections[i]])){
-                            for(var p = 0; p < navMenu.items[sections[i]].length; p++){
-                                el = angular.element("<li>" + navMenu.items[sections[i]][p] + "</li>");
-                                $element.append(el);
-                                //if(!angular.isArray(itemElm[sections[i]][p])) itemElm[sections[i]][p] = [];
-                                //itemElm[sections[i]][p].push(el);
-                            }
-                        }
-
-
-                    }
-
-                    $scope.menu = navMenu;
-                    $scope.$watchCollection("menu.items", function(items){
-                        //console.log("Item watch firing");
-                    })
-                    $scope.$watchCollection("menu.sections", function(sections){
-                        //console.log("Watch firing");
-                        //Remove all elements
-                        if(sectionElm.length > 0){
-                            for(var i = 0; i < sectionElm.length; i++){
-                                resetSection(sections, i);
-                            }
-                            sectionElm = [];
-                        }
-
-                        for(var i = 0; i < sections.length; i++){
-                            buildSection(sections, i);
-                        }
-                    })
-
-                }
-
-            }
-        }
+        }                           //end directive definition
     }])

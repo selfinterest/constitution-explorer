@@ -1,4 +1,3 @@
-//= require_tree filters
 angular.module("filters", []).
     filter("markReferences", ["references", function(references){
         /**

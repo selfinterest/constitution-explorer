@@ -7,13 +7,13 @@ div(ng-show='section')
             thead
                 th
                 th Title
-                th Lines
+                th References
                 th
             tr(ng-repeat='item in references.items | orderBy:"title"')
                 td.icons.span1: i(ng-click='references.remove(part, section, item)').icon-remove
-                td.span9 {{item.title}}
+                td.span8 {{item.title}}
                 td
-                    div(ng-show="!item.editing") {{item.lines}}
+                    div(ng-show="!item.editing") {{item.full}}
                     form(ng-show="item.editing").input-append
                         input(type="text", ng-model="item.lines")
                         button(ng-click="references.editLine(part, section, item, true)").btn Submit

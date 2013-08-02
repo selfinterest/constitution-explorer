@@ -157,8 +157,8 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                 "create": function(req){
                     //req.data.section = the name of the section, req.data.item = the name of the item to add
                     db.Models.section.addItem(req.data.section, req.data.item).then(
-                        function(item){
-                            app.io.broadcast("item:new", item);
+                        function(obj){            //{section: the section name, item: the item added}
+                            app.io.broadcast("item:new", obj);
                         }
                     );
                 },
@@ -171,8 +171,8 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                 },
                 "edit": function(req){
                     db.Models.section.editItem(req.data.section, req.data.item).then(
-                        function(section){
-                            app.io.broadcast("section:new", section);
+                        function(obj){          //{section: the section name, item: the item with its new name}
+                            app.io.broadcast("item:new", obj);
                         }
                     )
                 }

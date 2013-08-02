@@ -16,24 +16,57 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
     });
 
     var referenceSchema = new Schema({
-        filename: {type: String},
+        //filename: {type: String, required: true},
         title: {type: String},
-        lines: {type: String}
+        lines: {type: String},
+        paragraph: {type: String},
+        pdfPage: {type: Number},
+        page: {type: Number},
+        volume: {type: String},
+        full: {type: String}
+    });
+
+    var filenameSchema = new Schema({
+        name: {type: String, required: true},
+        references: [{type: Schema.Types.ObjectId, ref: "Reference"}]
     });
 
     var subSectionSchema = new Schema({
         name: {type: String},
-        references: [referenceSchema]
+        filenames: [filenameSchema]
     });
 
     var sectionSchema = new Schema({
         name: {type: String, index: { unique: true, dropDups: true, sparse: true }},
-        subSections: [subSectionSchema]
+        subSections: [{type: Schema.Types.ObjectId, ref: "Subsection"}]
     });
 
+    //MIDDLEWARE
+    sectionSchema.pre("remove", function(next){
+        _.each(this.subSections, function(subSection){
+            subSection.remove();
+        })
+
+        next();
+    });
+
+    /*subSectionSchema.pre("remove", function(next){
+        _.each(this.filenames, function(filename){
+
+        })
+    });*/
+
+
+
+    /**
+     * Returns all sections and subsections
+     * @returns deferred, resolved with an array of objects (sections containing subsections.)
+     */
     sectionSchema.statics.getAll = function(){
         var deferred = Q.defer();
-        this.find().sort({"name": "asc"}).select({"subSections.references": false}).exec(function(err, results){
+        this.find().sort({"name": "asc"}).select({"subSections.references": false})
+            .populate({path: "subSections", model: Models.subSection})
+            .exec(function(err, results){
             if(err){
                 winston.error(err);
                 deferred.reject(new Error(err));
@@ -45,6 +78,11 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
         return deferred.promise;
     }
 
+    /**
+     * Creates a new section
+     * @param name The name of the section to create
+     * @returns Deferred. Resolves with results of the database call
+     */
     sectionSchema.statics.create = function(name){
         var section = new this({name: name});
         var deferred = Q.defer();
@@ -60,23 +98,40 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
         return deferred.promise;
     }
 
+    /**
+     * Deletes a section
+     * @param name The name of the section to delete
+     * @returns Deferred. Resolved with a list of all sections.
+     */
     sectionSchema.statics.delete = function(name){
         var model = this;
         var deferred = Q.defer();
-        this.remove({name: name}, function(err){
-            if(err){
-                winston.error(err);
-            }
 
-            //send back all sections
-            model.getAll().then(function(results){
-                deferred.resolve(results)
+        this.findOne({name: name})
+            .populate("subSections")
+            .exec(function(err, section){
+                section.remove(function(err){
+                    if(err){
+                        winston.error(err)
+                    } else {
+                        model.getAll().then(function(results){
+                            deferred.resolve(results);
+                        });
+                    }
+
+                });
+
             })
-        })
 
         return deferred.promise;
     }
 
+    /**
+     * Adds item itemName to section sectionName
+     * @param sectionName
+     * @param itemName
+     * @returns deferred. Resolves to the model of the new item added
+     */
     sectionSchema.statics.addItem = function(sectionName, itemName){
         var model = this;
         var deferred = Q.defer();
@@ -85,24 +140,45 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
                 winston.error(err);
                 deferred.reject(new Error(err));
             } else {
-                section.subSections.push({name: itemName});
-                section.save(function(err, results){
-                    if(err){
-                        winston.error(err);
-                        deferred.reject(new Error(err));
-                    } else {
-                        deferred.resolve(results);
-                    }
-                });
+                //create a subsection
+                var subSection = new Models.subSection({name: itemName});
+                //Save the subsection
+                subSection.save(function(err){
+                    section.subSections.push(subSection._id);               //push the subsection id onto the array
+                    section.save(function(err, results){                    //save the section, with its updated array
+                        if(err){
+                            winston.error(err);
+                            deferred.reject(new Error(err));
+                        } else {
+                            deferred.resolve({section: sectionName, item: subSection});
+                        }
+                    });
+                })
+
+
             }
         })
 
         return deferred.promise;
     }
 
+    /**
+     * Edits an item (changes its name)
+     * @param sectionName The name of the section containing the item
+     * @param item The item to edit {name: the name, _id: the id}
+     * @returns {*}
+     */
     sectionSchema.statics.editItem = function(sectionName, item){
         var deferred = Q.defer();
-        this.findOne({name: sectionName}, function(err, section){
+        Models.subSection.findByIdAndUpdate(item._id, {name: item.name}, function(err, updatedItem){
+            if(err){
+                winston.error(err);
+                deferred.reject(new Error(err));
+            } else {
+                deferred.resolve({section: sectionName, item: updatedItem});
+            }
+        });
+        /*this.findOne({name: sectionName}, function(err, section){
             try {
                 section.subSections.id(item._id).name = item.name;
                 section.save(function(err, results){
@@ -117,7 +193,7 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
                 winston.error(error);
                 deferred.reject(new Error(error));
             }
-        })
+        })*/
 
         return deferred.promise;
     }
@@ -234,6 +310,33 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
     }*/
 
 
+    subSectionSchema.statics.delete = function(section, item){
+        var deferred = Q.defer();
+
+        //Delete the item
+        this.findById(item._id, function(err, subSection){
+           //remove the subSection
+            if(subSection){
+                subSection.remove();
+                //Now find the reference to the subSection in the section and delete that as well
+                Models.section.update({"name": section},
+                    {"$pull":
+                    {"subSections": {id: item._id}}
+                    }, function(err, numAffected, raw){
+                        console.log(arguments);
+                        deferred.resolve(raw);
+                    })
+
+            } else {
+                winston.error("Id of the subsection was not found.");
+                deferred.reject("Id of the subsection was not found");
+            }
+
+        });
+
+        return deferred.promise;
+    };
+
 
     /**
      * Removes an item from a section
@@ -242,8 +345,46 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
      */
     sectionSchema.statics.deleteItem = function(sectionName, item){
         var deferred = Q.defer();
+
+        var model = this;
+
+        this.findOne({name: sectionName})
+            .populate("subSections")
+            .exec(function(err, section){
+            section.subSections.pull(item._id);                         //this removes the item reference from the array
+            section.save(function(err, results){                        //Now remove the actual item
+                Models.subSection.findOne( {_id: item._id}, function(err, item){
+                    //Remove the actual item
+                    item.remove();
+                    model.findOne({name: sectionName})
+                        .populate("subSections")
+                        .exec(function(err, results){
+                            deferred.resolve(results);
+                        })
+                })
+
+                //deferred.resolve(results);
+            })
+        });
         //console.log(arguments);
-        this.findOne({name: sectionName}, function(err, section){
+        /*this.findOne({name: sectionName})
+            .populate({
+                path: "subSections",
+                model: Models.subSection
+            })
+            .exec(function(err, section){
+                console.log(section);
+                section.id(item._id).remove();
+                section.save(function(err, results){
+                    if(err){
+                        winston.error(err);
+                        deferred.reject(new Error(err));
+                    } else {
+                        deferred.resolve(results);
+                    }
+                })
+            });
+        /*this.findOne({name: sectionName}, function(err, section){
 
             try {
                 section.subSections.id(item._id).remove();
@@ -260,9 +401,16 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
                 deferred.reject(new Error(error));
             }
 
-        })
+        })*/
         return deferred.promise;
     }
+
+
+    var Models = {
+        section: mongoose.model("Section", sectionSchema ),
+        reference: mongoose.model("Reference", referenceSchema),
+        subSection: mongoose.model("Subsection", subSectionSchema)
+    };
 
     return {
         Schemas: {
@@ -270,10 +418,6 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
             section: sectionSchema,
             subSection: subSectionSchema
         },
-        Models: {
-            section: mongoose.model("Section", sectionSchema ),
-            reference: mongoose.model("Reference", referenceSchema),
-            subSection: mongoose.model("Subsection", subSectionSchema)
-        }
+        Models: Models
     }
 });
