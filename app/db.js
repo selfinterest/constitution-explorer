@@ -45,7 +45,7 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
     sectionSchema.pre("remove", function(next){
         _.each(this.subSections, function(subSection){
             subSection.remove();
-        })
+        });
 
         next();
     });
