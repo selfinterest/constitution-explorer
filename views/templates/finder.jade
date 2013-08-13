@@ -14,7 +14,7 @@ div.span12
             tbody
                 tr(ng-repeat="hit in search.results.hits.hits | markReferences")
                     td.icons.span1
-                        i(ng-click="addReference(hit)", ng-show="!hit.referenced").icon-plus
+                        i(ng-click="addDocument(hit)", ng-show="!hit.referenced").icon-plus
                         i(ng-show="hit.referenced").icon-ok
                     td.span9: a(ng-href="http://www.originaldocuments.ca/documents/{{hit._source.filename}}", target="_blank") {{hit._source.title}}
                     td.span2 {{hit._source.date}}

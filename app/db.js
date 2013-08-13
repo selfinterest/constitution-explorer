@@ -27,7 +27,8 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
     });
 
     var filenameSchema = new Schema({
-        name: {type: String, required: true},
+        name: {type: String, required: true, unique: true},
+        title: {type: String, required: true, unique: true},
         references: [{type: Schema.Types.ObjectId, ref: "Reference"}]
     });
 
@@ -64,8 +65,8 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
      */
     sectionSchema.statics.getAll = function(){
         var deferred = Q.defer();
-        this.find().sort({"name": "asc"}).select({"subSections.references": false})
-            .populate({path: "subSections", model: Models.subSection})
+        this.find().sort({"name": "asc"}).select({"subSections.filenames": 0})
+            .populate({path: "subSections", model: Models.subSection, select: {"filenames": false}})
             .exec(function(err, results){
             if(err){
                 winston.error(err);
@@ -402,6 +403,34 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
             }
 
         })*/
+        return deferred.promise;
+    }
+
+    subSectionSchema.statics.getAllDocuments = function(name){
+        var deferred = Q.defer();
+        this.findOne({name: name})
+            .exec(function(err, subSection){
+                deferred.resolve(subSection);
+            });
+        return deferred.promise;
+    }
+
+    subSectionSchema.statics.putDocument = function(subSectionName, document){
+        var deferred = Q.defer();
+        var model = this;
+        console.log("Creating document: %s %o", subSectionName, document);
+        //console.log(arguments);
+        this.findOneAndUpdate(
+            {name: subSectionName},
+            {$push:
+                {
+                    filenames: {name: document.filename, title: document.title, references: []}
+                }
+            }).exec(function(){
+                model.getAllDocuments(subSectionName).then(function(subSection){
+                    deferred.resolve(subSection);
+                })
+            })
         return deferred.promise;
     }
 

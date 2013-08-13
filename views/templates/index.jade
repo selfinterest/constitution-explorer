@@ -1,2 +1,3 @@
-div(ng-include src="'/templates/references'", ng-controller="ReferenceCtrl").row-fluid
+div(ng-include src="'/templates/documents'", ng-controller="DocumentsCtrl")
+div(ng-include src="'/templates/finder'", ng-controller="FinderCtrl", ng-show="menu.flags.active.item")
 //div(ng-include src="'/templates/finder'", ng-controller="FinderCtrl").row-fluid

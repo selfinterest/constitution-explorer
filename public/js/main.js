@@ -8,6 +8,69 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                 controller: "IndexCtrl",
                 reloadOnSearch: true
             })
+            .when("/references", {
+                templateUrl: "/templates/empty"
+            })
+    }])
+    /** @factory
+     *  Represents a wire that connects a controller, a service, and the server-side socket infrastructure
+     */
+    .factory("wireFactory", ["socket", function(socket){
+        console.log(socket);
+
+        function Wire(options, room){
+            var my = this;
+
+            if(angular.isDefined(room)){
+                this.room = room;
+                socket.emit("subscribe", room);
+            }
+
+
+            function serviceCollection(){
+                return my.service[my.collection];
+            }
+
+            function setCollection(items){
+                my.collection = items;
+            }
+
+            /**
+             * Reference to a collection in which to store data returned from the socket.
+             * @type {*}
+             */
+            this.collection = options.collection;
+
+            /**
+             * The socket prefix to use, e.g. "document" or "section"
+             * @type String
+             */
+            this.socketPrefix = options.socketPrefix;
+
+            /* Standard REST events */
+            this.getEvent = this.socketPrefix + ":" + "get";
+            this.putEvent = this.socketPrefix + ":" + "put";
+            this.deleteEvent = this.socketPrefix + ":" + "delete";
+            this.postEvent = this.socketPrefix + ":" + "post";
+
+            socket.on(this.getEvent, function(data){
+                setCollection(data);
+            })
+        }
+
+
+        Wire.prototype.get = function(options){
+            if(!angular.isDefined(options)) options = {};
+            socket.emit(this.getEvent, options);
+        }
+
+        Wire.prototype.unsubscribe = function(){
+            socket.emit("unsubscribe", this.room);
+        }
+
+
+        return Wire;
+
     }])
     .service("navMenuService", ["socket", "$http", "$location", function(socket, $http, $location){
 

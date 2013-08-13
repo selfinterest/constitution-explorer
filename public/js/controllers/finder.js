@@ -1,5 +1,5 @@
 angular.module("FinderController", [])
-    .controller("FinderCtrl", ["$scope", "$http", "navMenuService", "references", function($scope, $http, menu, references){
+    .controller("FinderCtrl", ["$scope", "$http", "navMenuService", "references", "documents", function($scope, $http, menu, references, documents){
         $scope.search = {};
         $scope.search.results = [];
 
@@ -28,10 +28,11 @@ angular.module("FinderController", [])
             })
         }
 
-        $scope.addReference = function(hit){
+        $scope.addDocument = function(hit){
             var section = menu.flags.active.section;
             var item = menu.flags.active.item;
-            references.add(section, item, hit._source);
+            documents.put(section, item, hit._source);
+            //references.add(section, item, hit._source);
             /*$http.put("/api/references/"+section + "/" + item + "/" + hit._source.filename, {title: hit._source.title}).success(function(data){
 
             })*/

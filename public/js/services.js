@@ -33,10 +33,29 @@ angular.module("services", [])
             }
         }
 
+        return service;
 
+    }])
+    .service("documents", ["$http", "socket", "wireFactory", function($http, socket, wire){
+        var service = {};
 
+        service.filenames = [];
+
+        service.get = function(sectionName, itemName){
+            service.filenames = [];
+            socket.emit("documents:get", {sectionName: sectionName, itemName: itemName});
+        }
+
+        service.put = function(sectionName, itemName, document){
+            socket.emit("documents:put", {sectionName: sectionName, itemName: itemName, document: document});
+        }
+
+        service.delete = function(sectionName, itemName, document){
+            socket.emit("documents:delete", {sectionName: sectionName, itemName: itemName, document: document});
+        }
 
         return service;
 
     }])
+
 ;
