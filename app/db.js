@@ -27,8 +27,8 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
     });
 
     var filenameSchema = new Schema({
-        name: {type: String, required: true, unique: true},
-        title: {type: String, required: true, unique: true},
+        name: {type: String, required: true, unique: true, dropDups: true, sparse: true}, //, unique: true, sparse: true, dropDups: true},
+        title: {type: String, required: true},// unique: true, sparse: true, dropDups: true},
         references: [{type: Schema.Types.ObjectId, ref: "Reference"}]
     });
 
@@ -68,12 +68,23 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
         this.find().sort({"name": "asc"}).select({"subSections.filenames": 0})
             .populate({path: "subSections", model: Models.subSection, select: {"filenames": false}})
             .exec(function(err, results){
-            if(err){
-                winston.error(err);
-                deferred.reject(new Error(err));
-            } else {
-                deferred.resolve(results);
-            }
+                if(err){
+                    winston.error(err);
+                    deferred.reject(new Error(err));
+                } else {
+                    var response = {};
+                    response.sections = [];
+                    response.items = {};
+
+                    _.each(results, function(r){
+                        response.items[r.name] = _.sortBy(r.subSections, "name");
+                        response.sections.push(r.name);
+                    });
+
+                    if(response.sections.length < 1) response.sections = [];
+
+                    deferred.resolve(response);
+                }
         })
 
         return deferred.promise;
@@ -127,6 +138,44 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
         return deferred.promise;
     }
 
+    subSectionSchema.statics.put = function(sectionName, subSectionName){
+        var model = this;
+        var deferred = Q.defer();
+        var subSection = new Models.subSection({name: subSectionName});
+
+        //Find the section to save this subsection under
+
+        Models.section.findOne({name: sectionName}, function(err, section){
+
+           if(err) throw new Error(err);
+           if(section){
+               subSection.save(function(err, subSection){
+                   if(err) throw new Error(err);
+                   section.subSections.push(subSection);
+                   section.save(function(err, section){
+                       if(err) throw new Error(err);
+                       deferred.resolve({sectionName: sectionName, subSection: subSection});
+                   })
+               })
+           } else {
+               winston.error("Section name %s not found", sectionName);
+               deferred.resolve({ok: false});
+           }
+
+        });
+        return deferred.promise;
+    }
+
+    subSectionSchema.statics.post = function(sectionName, subSection){
+        var deferred = Q.defer();
+        this.findByIdAndUpdate(subSection._id, {name: subSection.newName}, function(err, subSection){
+            if(err) throw new Error(err);
+            console.log(subSection);
+            deferred.resolve({sectionName: sectionName, subSection: subSection});
+        })
+
+        return deferred.promise;
+    }
     /**
      * Adds item itemName to section sectionName
      * @param sectionName

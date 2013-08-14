@@ -24,13 +24,14 @@ html(lang="en", ng-app="ConstitutionExplorer")
                         li(nav-menu2).nav-header
                             span.pull-right.icons
                                 i(ng-click="menu.minimizeSection(section)").icon-minus
-                                i(ng-click="menu.deleteSection(section)").icon-remove
+                                i(ng-click="wire.delete(section)").icon-remove
                             | {{section.name}}
                     div.input-append
                         form
                             label Add part
                             input(type="text", ng-model="newSection", placeholder="New part", ng-change="validateNewSection()").input-small//)//, placeholder="New section", tooltip-placement="bottom", tooltip="You can add a new section here", tooltip-animation="true", tooltip-trigger="focus").input-small
-                            button(ng-click="addNewSection()", ng-disabled="!newSectionValid").btn Submit
+                            button(ng-click="wire.put(newSection)", ng-disabled="!newSectionValid").btn Submit
                 div(ng-view).span10.border-bottom
+                div(ng-include src="'/templates/finder'", ng-controller="FinderCtrl", ng-show="menu.flags.active.item").span10
 
 

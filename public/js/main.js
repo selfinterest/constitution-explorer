@@ -15,8 +15,8 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
     /** @factory
      *  Represents a wire that connects a controller, a service, and the server-side socket infrastructure
      */
-    .factory("wireFactory", ["socket", function(socket){
-        console.log(socket);
+    .service("wire", ["socket", "$rootScope", function(socket, $rootScope){
+
 
         function Wire(options, room){
             var my = this;
@@ -35,11 +35,16 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                 my.collection = items;
             }
 
+            /** @var A reference to an object that houses the collection */
+            this.entity = options.entity;
+
             /**
-             * Reference to a collection in which to store data returned from the socket.
-             * @type {*}
+             * Name (index) of the collection within the entity.
+             * @type String
              */
             this.collection = options.collection;
+
+
 
             /**
              * The socket prefix to use, e.g. "document" or "section"
@@ -47,15 +52,55 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
              */
             this.socketPrefix = options.socketPrefix;
 
+
+            this.init = angular.isDefined(options.init) ? options.init : false;
+
             /* Standard REST events */
             this.getEvent = this.socketPrefix + ":" + "get";
             this.putEvent = this.socketPrefix + ":" + "put";
             this.deleteEvent = this.socketPrefix + ":" + "delete";
             this.postEvent = this.socketPrefix + ":" + "post";
 
+            this.getCb = null;
+            this.putCb = null;
+            this.deleteCb = null;
+            this.postCb = null;
+
+
+
+            if(angular.isDefined(options.callbacks)){
+                this.getCb = angular.isFunction(options.callbacks.get) ? options.callbacks.get : null;
+                this.putCb = angular.isFunction(options.callbacks.put) ? options.callbacks.put : null;
+                this.deleteCb = angular.isFunction(options.callbacks.delete) ? options.callbacks.delete : null;
+                this.postCb = angular.isFunction(options.callbacks.post) ? options.callbacks.post : null;
+            }
+
+            /**
+             * Fires when items are received from the server, typically but not always in response to a get request from the client.
+             * @return A promise
+             */
+
             socket.on(this.getEvent, function(data){
-                setCollection(data);
+                my.entity[my.collection] = data;
+
+                if(my.getCb) {
+                    my.getCb(data);
+                }
+            });
+
+            socket.on(this.putEvent, function(data){
+                if(my.putCb){
+                    my.putCb(data);
+                }
+            });
+
+            socket.on(this.postEvent, function(data){
+                if(my.postCb) my.postCb(data);
             })
+
+            if(this.init) this.get();
+
+            //console.log(my);
         }
 
 
@@ -64,12 +109,47 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
             socket.emit(this.getEvent, options);
         }
 
+        Wire.prototype.put = function(options){
+            if(!angular.isDefined(options)) options = {};
+            socket.emit(this.putEvent, options);
+        }
+
+        Wire.prototype.delete = function(options){
+            if(!angular.isDefined(options)) options = {};
+            socket.emit(this.deleteEvent, options);
+        }
+
+        Wire.prototype.post = function(options){
+            if(!angular.isDefined(options)) options = {};
+            socket.emit(this.postEvent, options);
+        }
+
+        Wire.prototype.removeListeners = function(){
+            socket.removeListener(this.getEvent);
+            socket.removeListener(this.putEvent);
+            socket.removeListener(this.deleteEvent);
+            socket.removeListener(this.postEvent);
+        }
+
         Wire.prototype.unsubscribe = function(){
             socket.emit("unsubscribe", this.room);
+            //Also remove listeners
+            this.removeListeners();
         }
 
 
-        return Wire;
+
+        /*return {
+            $get: function(){
+                return Wire;
+            }
+        };*/
+
+        return {
+            getInstance: function(options, room){
+                return new Wire(options, room);
+            }
+        };
 
     }])
     .service("navMenuService", ["socket", "$http", "$location", function(socket, $http, $location){
@@ -181,7 +261,7 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
         });
 
         /* Get the sections from the server */
-        socket.emit("sections:get");
+        //socket.emit("sections:get");
 
         service.deleteSection = function(section){
 
@@ -262,8 +342,10 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                                 //clone.text(navMenu.sections[i]);
                                 parent.append(clone);
                                 var orderStr = "orderBy: 'item.name''";
-                                var html = "<li ng-repeat=\"item in items | orderBy:'name'\" ng-class='{active: (item.name == menu.flags.active.item && section.name == menu.flags.active.section)}'><a ng-href='/?s={{ section.name }}&ss={{ item.name }}' ng-show='!item.editing'>{{ item.name }}<span class='pull-right icons'><i class='icon-pencil' ng-click='menu.editItem(item, section, false)'></i><i class='icon-remove' ng-click='menu.deleteItem(section, item)'></i></span></a><form ng-show='item.editing' class='input-append'><input type='text' class='input-small' ng-model='item.newName'><button class='btn' ng-click='menu.editItem(item, section, true)'>Submit</button></form></li>";
-                                html += "<li class='input-append'><form><label>Add section</label><input type='text' ng-model='section.newItem' class='input-small'><button class='btn' ng-click='menu.addItem(section)' ng-disabled='!section.newItem'>Submit</button></form></li>";
+                                var html =
+                                    "<li ng-repeat=\"item in items | orderBy:'name'\" ng-class='{active: (item.name == menu.flags.active.item && section.name == menu.flags.active.section)}'><a ng-href='/{{ item._id }}' ng-show='!item.editing'>{{ item.name }}<span class='pull-right icons'><i class='icon-pencil' ng-click='editItem(item, section)'></i><i class='icon-remove' ng-click='menu.deleteItem(section, item)'></i></span></a><form ng-show='item.editing' class='input-append'><input type='text' class='input-small' ng-model='item.newName'><button class='btn' ng-click='subSectionWire.post({sectionName: section.name, subSection: item})'>Submit</button></form></li>";
+                                html +=
+                                    "<li class='input-append'><form><label>Add section</label><input type='text' ng-model='section.newItem' class='input-small'><button class='btn' ng-click='subSectionWire.put({sectionName: section.name, subSectionName: section.newItem})' ng-disabled='!section.newItem'>Submit</button></form></li>";
                                 //clone.after($compile(html)($childScope));
                                 clone.after($compile(html)($childScope));
                                 var block = {};

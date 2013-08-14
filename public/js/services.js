@@ -36,7 +36,7 @@ angular.module("services", [])
         return service;
 
     }])
-    .service("documents", ["$http", "socket", "wireFactory", function($http, socket, wire){
+    .service("documents", ["$http", "socket", "wire", function($http, socket, wire){
         var service = {};
 
         service.filenames = [];

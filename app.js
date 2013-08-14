@@ -163,7 +163,27 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                 }
             });
 
+            app.io.route("subSections", {
+                "put": function(req){
+                    db.Models.subSection.put(req.data.sectionName, req.data.subSectionName).then(
+                        function(obj){
+                            app.io.broadcast("subSections:put", obj);        //obj = {sectionName, subSection}
+                        }
+                    )
+                },
+                "post": function(req){
+                    db.Models.subSection.post(req.data.sectionName, req.data.subSection).then(
+                        function(obj){
+                            app.io.broadcast("subSections:post", obj);
+                        }
+                    )
+                }
+            })
             app.io.route("items", {
+
+                "put": function(req){
+                    console.log(req.data);
+                },
                 "create": function(req){
                     //req.data.section = the name of the section, req.data.item = the name of the item to add
                     db.Models.section.addItem(req.data.section, req.data.item).then(
@@ -190,13 +210,25 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
             app.io.route("sections", {
                 "get": function(req){
                     db.Models.section.getAll().then(
-                        function(results){
-                            //sort the results
-                            _.each(results, function(section){
-                                section.subSections = _.sortBy(section.subSections, "name");
-                            });
+                        function(response){
+                            //Parse the results out
+                            /*var response = {};
+                            response.sections = [];
+                            response.items = {};
 
-                            req.io.emit("sections", results);
+                            _.each(results, function(r){
+                                response.items[r.name] = _.sortBy(r.subSections, "name");
+                                response.sections.push(r.name);
+                            });*/
+
+                            req.io.emit("sections:get", response);
+                        }
+                    )
+                },
+                "put": function(req){
+                    db.Models.section.create(req.data).then(
+                        function(section){
+                            app.io.broadcast("sections:put", section);
                         }
                     )
                 },
@@ -209,8 +241,8 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                 },
                 "delete": function(req){
                     db.Models.section.delete(req.data.name).then(
-                        function(results){
-                            app.io.broadcast("sections", results);
+                        function(response){
+                            app.io.broadcast("sections:get", response);
                         }
                     )
                 }

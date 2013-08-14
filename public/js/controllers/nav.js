@@ -6,9 +6,65 @@
  * To change this template use File | Settings | File Templates.
  */
 angular.module("NavController", [])
-    .controller("NavCtrl", ["$scope", "navMenuService", "socket", "$location", function($scope, navMenu, socket, $location){
+    .controller("NavCtrl", ["$scope", "navMenuService", "socket", "$location", "wire", function($scope, navMenu, socket, $location, Wire){
 
         $scope.menu = navMenu;
+
+        //$scope.menu.parts.sections = ["BLAH"];
+
+        $scope.wire = Wire.getInstance({
+            socketPrefix: "sections",
+            entity: navMenu,
+            collection: "parts",
+            init: true,
+            callbacks: {
+                get: function(data){
+                    $scope.connection = {on: true};
+                },
+                put: function(data){
+                    navMenu.parts.sections.push(data.name);
+                }
+            }
+        });
+
+        $scope.subSectionWire = Wire.getInstance({
+            socketPrefix: "subSections",
+            entity: navMenu.parts,
+            collection: "items",
+            init: false,                    //this means we do NOT invoke the get method on instantiation
+                                            //And we don't do this because subSections will be retrieved through the first wire (section.)
+            callbacks: {
+                put: function(obj){
+                    if(!angular.isDefined(navMenu.parts.items[obj.sectionName])) navMenu.parts.items[obj.sectionName] = [];
+                    navMenu.parts.items[obj.sectionName].push(obj.subSection);
+                },
+                post: function(obj){
+                    var subSectionToUpdate = _.findWhere(navMenu.parts.items[obj.sectionName], {_id: obj.subSection._id});
+                    var index = navMenu.parts.items[obj.sectionName].indexOf(subSectionToUpdate);
+                    navMenu.parts.items[obj.sectionName][index] = obj.subSection;
+                },
+                delete: function(obj){
+
+                }
+            }
+        });
+
+
+        $scope.editItem = function(item, section){
+            item.editing = true;
+            item.newName = item.name;
+        }
+
+       // $scope.wire.get();
+
+        $scope.$on("$destroy", function(){
+            $scope.wire.removeListeners();
+            $scope.subSectionWire.removeListeners();
+        })
+
+
+
+
 
         $scope.$watch(function(){ return $location.search()}, function(search){
             navMenu.flags.active.section = search.s;
@@ -44,7 +100,7 @@ angular.module("NavController", [])
             //console.log("Got connection");
         });
 
-        socket.emit("connection:get");
+        //socket.emit("connection:get");
 
 
     }])
