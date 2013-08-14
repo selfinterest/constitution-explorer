@@ -12,6 +12,7 @@ angular.module("NavController", [])
 
         //$scope.menu.parts.sections = ["BLAH"];
 
+
         $scope.wire = Wire.getInstance({
             socketPrefix: "sections",
             entity: navMenu,
@@ -27,6 +28,11 @@ angular.module("NavController", [])
             }
         });
 
+        function findSubsectionAndDoSomething(sectionName, subSectionId, fn){
+            var subSection = _.findWhere(navMenu.parts.items[sectionName], {_id: subSectionId});
+            var index = navMenu.parts.items[sectionName].indexOf(subSection);
+            fn(navMenu.parts.items[sectionName], navMenu.parts.items[sectionName][index], index);
+        }
         $scope.subSectionWire = Wire.getInstance({
             socketPrefix: "subSections",
             entity: navMenu.parts,
@@ -44,7 +50,10 @@ angular.module("NavController", [])
                     navMenu.parts.items[obj.sectionName][index] = obj.subSection;
                 },
                 delete: function(obj){
-
+                    findSubsectionAndDoSomething(obj.sectionName, obj.subSection._id,
+                        function(subSectionArray, subSection, index){
+                            navMenu.parts.items[obj.sectionName] = _.without(subSectionArray, subSection);
+                        })
                 }
             }
         });

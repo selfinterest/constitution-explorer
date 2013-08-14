@@ -51,6 +51,16 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
         next();
     });
 
+    subSectionSchema.pre("remove", function(next){
+        //find the section that owns this subSection
+        Models.section.update({subSections: this._id}, {$pull: {
+            subSections: this._id
+        }}, function(err){
+            if(err) winston.error(err);
+            next();
+        })
+    })
+
     /*subSectionSchema.pre("remove", function(next){
         _.each(this.filenames, function(filename){
 
@@ -170,10 +180,25 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
         var deferred = Q.defer();
         this.findByIdAndUpdate(subSection._id, {name: subSection.newName}, function(err, subSection){
             if(err) throw new Error(err);
-            console.log(subSection);
             deferred.resolve({sectionName: sectionName, subSection: subSection});
         })
 
+        return deferred.promise;
+    }
+
+    subSectionSchema.statics.delete = function(sectionName, subSection){
+        var deferred = Q.defer();
+
+        this.findById(subSection._id, function(err, subSection){
+            if(err) throw new Error(err);
+            subSection.remove(function(err){
+                if(err) throw new Error(err);
+                console.log(sectionName);
+                console.log(subSection);
+                //console.log("Section name is %s and subSection is %o", sectionName, subSection);
+                deferred.resolve({sectionName: sectionName, subSection: subSection});
+            })
+        })
         return deferred.promise;
     }
     /**
@@ -360,7 +385,7 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
     }*/
 
 
-    subSectionSchema.statics.delete = function(section, item){
+    /*subSectionSchema.statics.delete = function(section, item){
         var deferred = Q.defer();
 
         //Delete the item
@@ -385,7 +410,7 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
         });
 
         return deferred.promise;
-    };
+    };*/
 
 
     /**

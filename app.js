@@ -177,6 +177,14 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                             app.io.broadcast("subSections:post", obj);
                         }
                     )
+                },
+
+                "delete": function(req){
+                    db.Models.subSection.delete(req.data.sectionName, req.data.subSection).then(
+                        function(obj){
+                            app.io.broadcast("subSections:delete", obj);
+                        }
+                    )
                 }
             })
             app.io.route("items", {
