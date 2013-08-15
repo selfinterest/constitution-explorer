@@ -15,6 +15,8 @@ angular.module("DocumentsController", [])
         //    function(section, subSection, index){
                 documents.wire.subscribe("/"+$routeParams.sectionName + "/" + $routeParams.subSectionName).then(function(){
                     documents.wire.get({sectionName: $routeParams.sectionName, subSectionName: $routeParams.subSectionName});
+                    $scope.sectionName = $routeParams.sectionName;
+                    $scope.subSectionName = $routeParams.subSectionName;
                 })
             //}
         //)

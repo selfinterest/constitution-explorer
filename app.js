@@ -96,8 +96,9 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
             app.post("/api/sections/:sectionId/:id", sections.postSubSection);
 
 
-            app.get("/api/references/:part/:section", references.get);
-            app.put("/api/references/:part/:section/:filename", references.put);
+            app.get("/api/references/:referenceId", references.get);
+            //app.get("/api/references/:part/:section", references.get);
+            //app.put("/api/references/:part/:section/:filename", references.put);
 
             app.post("/api/search", search.get);
             app.get("*", function(req, res){
@@ -259,10 +260,13 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
 
             app.io.route("references", {
                 "get": function(req){
-                    var sectionName = req.data.section;
-                    var itemName = req.data.item;
-                    var eventName = "references" + ":" + sectionName + ":" + itemName;
-                    db.Models.section.getReferences(sectionName, itemName).then(function(results){
+                    var sectionName = req.data.sectionName;
+                    var subSectionName = req.data.subSectionName;
+                    var filename = req.data.filename;
+                    var subSectionId = req.data.subSectionId;
+
+                    //var eventName = "references" + ":" + sectionName + ":" + itemName;
+                    db.Models.filename.getReferences(subSectionId, filename).then(function(results){
                         req.io.emit(eventName, {results: results});
                     })
                 },

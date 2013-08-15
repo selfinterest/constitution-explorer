@@ -1,0 +1,24 @@
+//12 columns
+div
+    h4 Reference for
+        a(ng-href='http://www.primarydocuments.ca/documents/{{document.name}}', target="_blank")  {{document.title}}
+    h5(ng-show="referenceId='_null'") New entry
+    form(ng-model="newReference")
+        fieldset
+            legend Fields
+            div.span5
+                label Title
+                div.input-append
+                    input(type="text", name="title", ng-model="title").input-xlarge
+                    button(ng-click="title = document.title").btn: i.icon-refresh
+                span.help-block This title may be used for display and search.
+                label Lines
+                input(type="text").input-xlarge
+            div.span5
+                label Page
+                input(type="text").input-xlarge
+                span.help-block You can use ranges, e.g. 1, 2, 5-7
+                label PDF page
+                input(type="text").input-xlarge
+
+    a(ng-href="/{{sectionName}}/{{subSectionName}}").btn.btn-primary.offset10 Return

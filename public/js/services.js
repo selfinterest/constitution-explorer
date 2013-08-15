@@ -36,7 +36,7 @@ angular.module("services", [])
         return service;
 
     }])
-    .service("documents", ["wire", function(Wire){
+    .service("documents", ["wire", "$rootScope", function(Wire, $rootScope){
         var service = {};
 
         service.filenames = [];
@@ -59,7 +59,7 @@ angular.module("services", [])
             socket.emit("documents:put", {sectionName: sectionName, itemName: itemName, document: document});
         }
 
-        service.delete = function(sectionName, itemName, document){
+        service.delete = function(setionName, itemName, document){
             socket.emit("documents:delete", {sectionName: sectionName, itemName: itemName, document: document});
         }*/
 
@@ -116,6 +116,12 @@ angular.module("services", [])
         });*/
 
 
+        service.deferred = Q.defer();
+
+        service.getPromise = function(){
+            return service.deferred.promise;
+        }
+
         /**
          * Updates the URL, based on the menu settings
          */
@@ -125,6 +131,7 @@ angular.module("services", [])
             try {
                 service.findSubsectionAndDoSomething(sectionName, {name: subSectionName}, function(section, subSection, index){
                     service.activeId = subSection._id;
+                    service.deferred.resolve(service.activeId);
                 })
             } catch (e){
                 /*if(e.indexOf("Subsection") > -1){           //the subsection no longer exists

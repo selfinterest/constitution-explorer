@@ -1,27 +1,56 @@
 define(["app/db", "underscore", "async", "q"], function(db, _, async, Q){
     return {
         get: function(req, res){
-            var section = req.params.part;
-            var subSection = req.params.section;
-            db.Models.section.getReferences(section, subSection).then(function(results){
+
+            function getReference(referenceId){
                 var deferred = Q.defer();
-                var eventName = "references:"+section+":"+subSection;
-                req.io.emit("test", {name: "blah"});
 
-                /*async.each(results, function(result, callback){
-                    console.log(eventName);
-                    console.log("Emiting event");
-                    req.io.emit("references:"+section+":"+subSection, {name: "blah"});
-                    callback();
-                }, function(){
-                    res.send({ok: true});
-                })*/
+                if(referenceId != "_null"){     // looking up the reference
+                    db.Models.reference.findById(referenceId, function(err, r){
+                        deferred.resolve(r);
+                    })
+                } else {
+                    deferred.resolve({});
+                }
 
-                //res.send(results);
                 return deferred.promise;
-            }).then(function(){
-                res.send({ok: true});
-            })
+            }
+
+
+            function getDocument(subSectionId, filename){
+
+                var deferred = Q.defer();
+
+                db.Models.subSection.findById(subSectionId, "-references", function(err, subSection){
+                    if(err) console.log(err);
+                    console.log(subSection);
+                    console.log(_.findWhere(subSection.filenames, {name: filename}));
+                    console.log("Filename is %s", filename);
+                    deferred.resolve(_.findWhere(subSection.filenames, {name: filename }));
+                })
+
+                return deferred.promise;
+            }
+
+
+            var sectionName = req.query.sectionName;
+            var subSectionId = req.query.subSectionId;
+            var filename = req.query.filename;
+            var referenceId = req.params.referenceId;
+            var obj = {};
+
+            getReference(referenceId)
+                .then(function(reference){
+                    obj.reference = reference;
+                    getDocument(subSectionId, filename).then(function(document){
+                        obj.document = document;
+                        res.send(obj);
+                    })
+                })
+
+
+
+
         },
 
         put: function(req, res){

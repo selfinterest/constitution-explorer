@@ -488,7 +488,11 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
             .exec(function(err, section){
                 if(section){
                     var subSection = _.findWhere(section.subSections, {name: subSectionName});
-                    deferred.resolve(subSection.filenames);
+                    if(subSection) {
+                        deferred.resolve(subSection.filenames);
+                    } else {
+                        deferred.reject("HMM!");
+                    }
                 }
             });
         /*this.findOne({name: name})

@@ -8,6 +8,14 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                 controller: "IndexCtrl",
                 reloadOnSearch: true
             })
+            .when("/:sectionName/:subSectionName/:filename", {
+                templateUrl: "/templates/referenceView",
+                controller: "ReferenceCtrl"
+            })
+            .when("/:sectionName/:subSectionName/:filename/:referenceId", {
+                templateUrl: "/templates/referenceView",
+                controller: "ReferenceCtrl"
+            })
             .when("/", {
                 templateUrl: "/templates/empty"
             })

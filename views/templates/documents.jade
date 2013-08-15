@@ -10,13 +10,13 @@ div(ng-show='documents.filenames.length > 0')
             th
         tr(ng-repeat='item in documents.filenames | orderBy:"title"')
             td.icons.span1: i(ng-click='deleteDocument(item)').icon-remove
-            td.span8 {{item.title}}
+            td.span8: a(ng-href="http://www.primarydocuments.ca/documents/{{item.name}}") {{item.title}}
             td
                 div(ng-show="!item.editing") {{item.full}}
                 form(ng-show="item.editing").input-append
                     input(type="text", ng-model="item.lines")
                     button(ng-click="references.editLine(part, section, item, true)").btn Submit
-            td.icons.span1: i(ng-click="references.editLine(part, section, item, false)").icon-pencil
+            td.icons.span1: a(ng-href="/{{sectionName}}/{{subSectionName}}/{{item.name}}").icon-pencil
 //i(ng-repeat='line in item.pages').icon-remove {{line}}
 //form.input-append
 //    input(type="text", ng-model="item.line").span4
