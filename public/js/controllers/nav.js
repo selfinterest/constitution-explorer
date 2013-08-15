@@ -6,11 +6,9 @@
  * To change this template use File | Settings | File Templates.
  */
 angular.module("NavController", [])
-    .controller("NavCtrl", ["$scope", "navMenuService", "socket", "$location", "wire", function($scope, navMenu, socket, $location, Wire){
+    .controller("NavCtrl", ["$scope", "navMenuService", "socket", "$location", "wire", "$routeParams", "$q", function($scope, navMenu, socket, $location, Wire, $routeParams, Q){
 
         $scope.menu = navMenu;
-
-        //$scope.menu.parts.sections = ["BLAH"];
 
 
         $scope.wire = Wire.getInstance({
@@ -24,15 +22,45 @@ angular.module("NavController", [])
                 },
                 put: function(data){
                     navMenu.parts.sections.push(data.name);
+                    $scope.newSection = "";
+                },
+                after: function(data, method){          //after a socket event, we update location
+                    if(method == "get"){
+                        navMenu.updateLocation();
+                        $scope.$on("$routeChangeSuccess", function(){
+                            navMenu.updateLocation();
+                        })
+                    }
                 }
+                /*after: function(data){
+                    //We got sections, or put a new one in. Do a menu check.
+                    var sectionName = $routeParams.sectionName, subSectionName = $routeParams.subSectionName;
+                    //navMenu.activateSubsection(sectionName, {name: subSectionName})
+                    navMenu.findSubsectionAndDoSomething(sectionName, {name: subSectionName}, function(section, subSection){
+                        console.log(arguments);
+                        if(section){
+                            navMenu.activeId = subSection._id;
+                        } else {
+                            console.log("Redirecting");
+                            $location.path("/");
+                        }
+                    })
+
+                    $scope.routeEvent = $scope.$on("$routeChangeSuccess", function(){
+                        console.log("Firing route event");
+                        var sectionName = $routeParams.sectionName, subSectionName = $routeParams.subSectionName;
+                        navMenu.findSubsectionAndDoSomething(sectionName, {name: subSectionName}, function(section, subSection){
+                            if(section) navMenu.activeId = subSection._id;
+                        })
+                    });
+
+
+                }*/
             }
         });
 
-        function findSubsectionAndDoSomething(sectionName, subSectionId, fn){
-            var subSection = _.findWhere(navMenu.parts.items[sectionName], {_id: subSectionId});
-            var index = navMenu.parts.items[sectionName].indexOf(subSection);
-            fn(navMenu.parts.items[sectionName], navMenu.parts.items[sectionName][index], index);
-        }
+
+
         $scope.subSectionWire = Wire.getInstance({
             socketPrefix: "subSections",
             entity: navMenu.parts,
@@ -45,15 +73,27 @@ angular.module("NavController", [])
                     navMenu.parts.items[obj.sectionName].push(obj.subSection);
                 },
                 post: function(obj){
-                    var subSectionToUpdate = _.findWhere(navMenu.parts.items[obj.sectionName], {_id: obj.subSection._id});
-                    var index = navMenu.parts.items[obj.sectionName].indexOf(subSectionToUpdate);
-                    navMenu.parts.items[obj.sectionName][index] = obj.subSection;
+                    //var deferred = Q.defer();
+
+                    navMenu.findSubsectionAndDoSomething(obj.sectionName, {_id: obj.subSection._id},
+                        function(section, subSection, index){
+                            navMenu.parts.items[obj.sectionName][index].name = obj.subSection.name;
+                        }
+
+                    );
+                    //var subSectionToUpdate = _.findWhere(navMenu.parts.items[obj.sectionName], {_id: obj.subSection._id});
+                    //var index = navMenu.parts.items[obj.sectionName].indexOf(subSectionToUpdate);
+                    //navMenu.parts.items[obj.sectionName][index] = obj.subSection;
+                    //return deferred.promise;
                 },
                 delete: function(obj){
-                    findSubsectionAndDoSomething(obj.sectionName, obj.subSection._id,
+                    navMenu.findSubsectionAndDoSomething(obj.sectionName, {_id: obj.subSection._id},
                         function(subSectionArray, subSection, index){
                             navMenu.parts.items[obj.sectionName] = _.without(subSectionArray, subSection);
                         })
+                },
+                after: function(data){
+                    navMenu.updateLocation();
                 }
             }
         });
@@ -64,12 +104,12 @@ angular.module("NavController", [])
             item.newName = item.name;
         }
 
-       // $scope.wire.get();
-
         $scope.$on("$destroy", function(){
             $scope.wire.removeListeners();
             $scope.subSectionWire.removeListeners();
         })
+
+
 
 
 

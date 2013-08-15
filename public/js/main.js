@@ -3,19 +3,24 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
         $locationProvider.html5Mode(true);
         $locationProvider.hashPrefix("!");
         $routeProvider
-            .when("/", {
+            .when("/:sectionName/:subSectionName", {
                 templateUrl: '/templates/index',
                 controller: "IndexCtrl",
                 reloadOnSearch: true
             })
-            .when("/references", {
+            .when("/", {
                 templateUrl: "/templates/empty"
             })
+    }])
+    .run(["$rootScope", "navMenuService", function($rootScope, navMenu){
+        /*$rootScope.$on("$routeChangeSuccess", function(){
+            navMenu.updateLocation();
+        })*/
     }])
     /** @factory
      *  Represents a wire that connects a controller, a service, and the server-side socket infrastructure
      */
-    .service("wire", ["socket", "$rootScope", function(socket, $rootScope){
+    .service("wire", ["socket", "$q", function(socket, Q){
 
 
         function Wire(options, room){
@@ -73,6 +78,7 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                 this.putCb = angular.isFunction(options.callbacks.put) ? options.callbacks.put : null;
                 this.deleteCb = angular.isFunction(options.callbacks.delete) ? options.callbacks.delete : null;
                 this.postCb = angular.isFunction(options.callbacks.post) ? options.callbacks.post : null;
+                this.after = angular.isFunction(options.callbacks.after) ? options.callbacks.after: null;
             }
 
             /**
@@ -81,25 +87,34 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
              */
 
             socket.on(this.getEvent, function(data){
+                var promise = null;
                 my.entity[my.collection] = data;
 
                 if(my.getCb) {
-                    my.getCb(data);
+                    promise = my.getCb(data);
                 }
+
+                if(my.after) Q.when(promise).then(my.after(data, "get"));
+
             });
 
             socket.on(this.putEvent, function(data){
-                if(my.putCb){
-                    my.putCb(data);
-                }
+                var promise = null;
+                if(my.putCb) promise = my.putCb(data);
+                if(my.after) Q.when(promise).then(my.after(data, "put"));
             });
 
             socket.on(this.postEvent, function(data){
-                if(my.postCb) my.postCb(data);
+                var promise = null;
+                if(my.postCb) promise = my.postCb(data);
+                if(my.after) Q.when(promise).then(my.after(data, "post"));
+
             })
 
             socket.on(this.deleteEvent, function(data){
-                if(my.deleteCb) my.deleteCb(data);
+                var promise = null;
+                if(my.deleteCb) promise = my.deleteCb(data);
+                if(my.after) Q.when(promise).then(my.after(data, "delete"));
             })
 
             if(this.init) this.get();
@@ -156,159 +171,7 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
         };
 
     }])
-    .service("navMenuService", ["socket", "$http", "$location", function(socket, $http, $location){
 
-
-        /**
-         * Tries to keep the menu and URL in sync with the application state.
-         * Example: if an item is deleted, the menu and the URL may have to change.
-         */
-        function checkMenu(){
-            var locationItem = $location.search().ss;
-            var locationSection = $location.search().s;
-            var item = _.findWhere(service.parts.items[locationSection], {name: locationItem });
-
-            if(!item){
-                $location.replace();
-                service.flags.active.section = null;
-                service.flags.active.item = null;
-                $location.search("s", null);
-                $location.search("ss", null);
-            }
-        }
-        var service = {};
-        service.parts = {};
-        service.parts.items = {};
-        service.parts.sections = [];
-        service.activeItem = null;
-
-        service.flags = {};                 //This holds editing flags and the like, separate from parts, so that these can be changed without rerendering the whole menu
-        service.flags.active = {};
-        service.flags.editing = [];
-        service.flags.newName = "";
-
-        /**
-         * Fired when all sections are received.
-         */
-        socket.on("sections", function(sections){
-
-            //clear out old items and sections
-            service.parts.sections = [];
-            service.parts.items = {};
-            service.parts.sections = _.pluck(sections, "name");
-            _.each(sections, function(section){
-                service.parts.items[section.name] = [];
-                _.each(section.subSections, function(subSection){
-                    service.parts.items[section.name].push({name: subSection.name, _id: subSection._id});
-                });
-                //service.items[section.name] = section.subSections;
-            });
-
-            var locationSection = $location.search().s;
-            var locationSubSection = $location.search().ss;
-            var sectionIndex = _.indexOf(service.parts.sections, locationSection );
-            if(sectionIndex == -1){
-                $location.replace();
-                service.flags.active.section = null;
-                service.flags.active.item = null;
-                $location.search("s", null);
-                $location.search("ss", null);
-                return;
-            }          //The section no longer exists, probably because it was deleted
-
-            var locationItem = $location.search().ss;
-            //var locationSection = $location.search().s;
-            var item = _.findWhere(service.parts.items[locationSection], {name: locationItem });
-
-            if(!item){
-                $location.replace();
-                service.flags.active.section = null;
-                service.flags.active.item = null;
-                $location.search("s", null);
-                $location.search("ss", null);
-            }
-
-        });
-
-        /**
-         * Fired when a single new section is received, or a replacement section if one is edited
-         */
-        socket.on("section:new", function(section){
-
-            var index = _.indexOf(service.parts.sections, section.name);
-            if(index < 0){            //section did not already exist, so just add it
-                service.parts.sections.push(section.name);
-            } else {                  //this section already exists, so replace it
-                service.parts.sections[index] = section.name;
-                service.parts.items[service.parts.sections[index]] = section.subSections;
-                checkMenu();
-
-            }
-        })
-
-        //Fires when a new item is received
-        //Obj is: {section: the name of the section, item: the new item added}
-        socket.on("item:new", function(obj){
-            if(!angular.isDefined(service.parts.items[obj.section])) service.parts.items[obj.section] = [];
-
-            var itemToUpdate = _.findWhere(service.parts.items[obj.section], {_id: obj.item._id});
-
-            if(!itemToUpdate) {
-                service.parts.items[obj.section].push(obj.item);    //new item
-            } else {  //old item. Update it.
-                var index = _.indexOf(service.parts.items[obj.section], itemToUpdate);
-                service.parts.items[obj.section][index] = obj.item;
-                //$location.search("ss", obj.item.name);
-            }
-            checkMenu();
-
-        });
-
-        /* Get the sections from the server */
-        //socket.emit("sections:get");
-
-        service.deleteSection = function(section){
-
-            socket.emit("sections:delete", {name: section.name});
-        }
-
-
-
-        service.addItem = function(section){
-            //section.name = the name of the section to add the item under, section.newItem = the name of the new item
-            socket.emit("items:create", {section: section.name, item: section.newItem});
-        }
-
-
-        service.deleteItem = function(section, item){
-            socket.emit("items:delete", {section: section.name, item: item});
-        }
-
-        service.editing = function(item, section){
-            if(arguments.length == 0) return false;
-
-            var itemIndex = _.indexOf(service.parts.items[section.name], item);
-            return service.flags.editing[itemIndex];
-        }
-
-        service.editItem = function(item, section, submit ){
-            item.editing = !submit;
-            if(!submit){
-                item.newName = item.name;
-            } else {
-                //create a temporary item
-                var newItem = {};
-                newItem.name = item.newName;       //the new name
-                newItem._id = item._id;            //the OLD id
-                socket.emit("items:edit", {section: section.name, item: newItem});
-            }
-        }
-
-
-
-        return service;
-
-    }])
 
     .directive("navMenu2", ["navMenuService", "$compile", function(navMenu, $compile){
         return {
@@ -347,7 +210,7 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                                 parent.append(clone);
                                 var orderStr = "orderBy: 'item.name''";
                                 var html =
-                                    "<li ng-repeat=\"item in items | orderBy:'name'\" ng-class='{active: (item.name == menu.flags.active.item && section.name == menu.flags.active.section)}'><a ng-href='/{{ item._id }}' ng-show='!item.editing'>{{ item.name }}<span class='pull-right icons'><i class='icon-pencil' ng-click='editItem(item, section)'></i><i class='icon-remove' ng-click='subSectionWire.delete({sectionName: section.name, subSection: item})'></i></span></a><form ng-show='item.editing' class='input-append'><input type='text' class='input-small' ng-model='item.newName'><button class='btn' ng-click='subSectionWire.post({sectionName: section.name, subSection: item})'>Submit</button></form></li>";
+                                    "<li ng-repeat=\"item in items | orderBy:'name'\" ng-class='{active: item._id == menu.activeId}'><a ng-href='/{{ section.name }}/{{ item.name }}' ng-show='!item.editing'>{{ item.name }}<span class='pull-right icons'><i class='icon-pencil' ng-click='editItem(item, section)'></i><i class='icon-remove' ng-click='subSectionWire.delete({sectionName: section.name, subSection: item})'></i></span></a><form ng-show='item.editing' class='input-append'><input type='text' class='input-small' ng-model='item.newName'><button class='btn' ng-click='subSectionWire.post({sectionName: section.name, subSection: item})'>Submit</button></form></li>";
                                 html +=
                                     "<li class='input-append'><form><label>Add section</label><input type='text' ng-model='section.newItem' class='input-small'><button class='btn' ng-click='subSectionWire.put({sectionName: section.name, subSectionName: section.newItem})' ng-disabled='!section.newItem'>Submit</button></form></li>";
                                 //clone.after($compile(html)($childScope));

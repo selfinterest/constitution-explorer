@@ -6,8 +6,8 @@ html(lang="en", ng-app="ConstitutionExplorer")
         != css("styles.css")
         script(src="/socket.io/socket.io.js")
         != js("/lib/jquery/jquery.min.js")
-        != js("https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js")
-        //!= js("/lib/angular/angular.min.js")
+        //!= js("https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js")
+        != js("/lib/angular/angular.min.js")
         != js("/lib/angular-bootstrap/ui-bootstrap-tpls.min.js")
         != js("/lib/underscore/underscore-min.js")
         != js("/lib/angular-socket-io/socket.js")
@@ -32,6 +32,6 @@ html(lang="en", ng-app="ConstitutionExplorer")
                             input(type="text", ng-model="newSection", placeholder="New part", ng-change="validateNewSection()").input-small//)//, placeholder="New section", tooltip-placement="bottom", tooltip="You can add a new section here", tooltip-animation="true", tooltip-trigger="focus").input-small
                             button(ng-click="wire.put(newSection)", ng-disabled="!newSectionValid").btn Submit
                 div(ng-view).span10.border-bottom
-                div(ng-include src="'/templates/finder'", ng-controller="FinderCtrl", ng-show="menu.flags.active.item").span10
+                div(ng-include src="'/templates/finder'", ng-controller="FinderCtrl", ng-show="menu.activeId").span10
 
 
