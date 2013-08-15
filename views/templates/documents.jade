@@ -1,23 +1,22 @@
 //12 columns
-div(ng-show='section')
-    div(ng-show='references.items.length < 1'): h3 No references yet
-    div(ng-show='documents.items.length > 0')
-        h3 References
-        table.table.table-bordered.table-striped.table-hover
-            thead
-                th
-                th Title
-                th References
-                th
-            tr(ng-repeat='item in documents.items | orderBy:"title"')
-                td.icons.span1: i(ng-click='documents.delete(part, section, item)').icon-remove
-                td.span8 {{item.title}}
-                td
-                    div(ng-show="!item.editing") {{item.full}}
-                    form(ng-show="item.editing").input-append
-                        input(type="text", ng-model="item.lines")
-                        button(ng-click="references.editLine(part, section, item, true)").btn Submit
-                td.icons.span1: i(ng-click="references.editLine(part, section, item, false)").icon-pencil
+div(ng-show='references.items.length < 1'): h3 No references yet
+div(ng-show='documents.filenames.length > 0')
+    h3 Documents
+    table.table.table-bordered.table-striped.table-hover
+        thead
+            th
+            th Title
+            th References
+            th
+        tr(ng-repeat='item in documents.filenames | orderBy:"title"')
+            td.icons.span1: i(ng-click='deleteDocument(item)').icon-remove
+            td.span8 {{item.title}}
+            td
+                div(ng-show="!item.editing") {{item.full}}
+                form(ng-show="item.editing").input-append
+                    input(type="text", ng-model="item.lines")
+                    button(ng-click="references.editLine(part, section, item, true)").btn Submit
+            td.icons.span1: i(ng-click="references.editLine(part, section, item, false)").icon-pencil
 //i(ng-repeat='line in item.pages').icon-remove {{line}}
 //form.input-append
 //    input(type="text", ng-model="item.line").span4

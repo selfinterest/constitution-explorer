@@ -150,6 +150,7 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
             app.io.route('subscribe', function(req, res){
                 console.log("Client joining %s", req.data);
                 req.io.join(req.data);
+                req.io.emit("subscribe", req.data);
             });
 
             app.io.route("unsubscribe", function(req, res){
@@ -311,31 +312,40 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                 "get": function(req){
                     console.log("Getting documents");
                     var sectionName = req.data.sectionName;
-                    var itemName = req.data.itemName;
-                    db.Models.subSection.getAllDocuments(req.data.itemName).then(function(subSection){
+                    var subSectionName = req.data.subSectionName;
+                    db.Models.subSection.getAllDocuments(sectionName, subSectionName).then(function(documents){
                         //console.log(filenames);
-                        req.io.emit("documents:get", {documents: subSection.filenames});
+                        console.log(documents);
+                        req.io.emit("documents:get", documents);
                     })
                 },
                 "put": function(req){
-                    /** @var {} The section, as an object (section._id, etc) */
+                    /** @var The id of the subsection */
+                    var subSectionId = req.data.id;
+
+                    var subSectionName = req.data.subSectionName;
+
                     var sectionName = req.data.sectionName;
 
-                    /** @var {} The subsection, as an object. */
-                    var subSectionName = req.data.itemName;
 
                     /** @var {} The document object, as returned from the search engine */
                     var document = req.data.document;
 
-                    db.Models.subSection.putDocument(subSectionName, document).then(function(subSection){
-                        app.io.broadcast("documents:get", {documents: subSection.filenames});
+
+
+                    db.Models.subSection.putDocument(subSectionId, document).then(function(filenames){
+
+                        console.log(filenames);
+                        app.io.room("/"+sectionName + "/" + subSectionName).broadcast("documents:get", filenames);
+                        //app.io.broadcast("documents:get", {documents: subSection.filenames});
                     })
 
                 },
                 "delete": function(req){
-                    var sectionName = req.data.sectionName, subSectionName = req.data.itemName, document = req.data.document;
-                    db.Models.subSection.deleteDocument(subSectionName, document).then(function(subSection){
-                        app.io.broadcast("documents:get", {documents: subSection.filenames})
+                    var subSectionId = req.data.id, subSectionName = req.data.subSectionName, sectionName = req.data.sectionName, name = req.data.name;
+                    db.Models.subSection.deleteDocument(subSectionId, name).then(function(filenames){
+                        app.io.room("/"+sectionName + "/" + subSectionName).broadcast("documents:get", filenames);
+                        //app.io.broadcast("documents:get", {documents: subSection.filenames})
                     })
                 }
             })

@@ -26,9 +26,13 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
         function Wire(options, room){
             var my = this;
 
+            this.subscribeDeferred = null;
+
             if(angular.isDefined(room)){
                 this.room = room;
                 socket.emit("subscribe", room);
+            } else {
+                this.room = null;
             }
 
 
@@ -117,6 +121,13 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                 if(my.after) Q.when(promise).then(my.after(data, "delete"));
             })
 
+            socket.on("subscribe", function(data){
+                if(my.subscribeDeferred){
+                    my.subscribeDeferred.resolve(data);
+                    my.subscribeDeferred = null;
+                }
+            });
+
             if(this.init) this.get();
 
             //console.log(my);
@@ -150,10 +161,20 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
             socket.removeListener(this.postEvent);
         }
 
+        Wire.prototype.subscribe = function(room){
+            this.room = room;
+            socket.emit("subscribe", this.room);
+            this.subscribeDeferred = Q.defer();
+            return this.subscribeDeferred.promise;
+        }
+
         Wire.prototype.unsubscribe = function(){
-            socket.emit("unsubscribe", this.room);
+            if(this.room){
+                socket.emit("unsubscribe", this.room);
+                this.room = null;
+            }
             //Also remove listeners
-            this.removeListeners();
+            //this.removeListeners();
         }
 
 

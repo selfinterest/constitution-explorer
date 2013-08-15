@@ -36,10 +36,19 @@ angular.module("services", [])
         return service;
 
     }])
-    .service("documents", ["$http", "socket", "wire", function($http, socket, wire){
+    .service("documents", ["wire", function(Wire){
         var service = {};
 
         service.filenames = [];
+
+        service.wire = Wire.getInstance({
+            init: false,
+            socketPrefix: "documents",
+            entity: service,
+            collection: "filenames"
+        });
+
+        /*service.filenames = [];
 
         service.get = function(sectionName, itemName){
             service.filenames = [];
@@ -52,13 +61,13 @@ angular.module("services", [])
 
         service.delete = function(sectionName, itemName, document){
             socket.emit("documents:delete", {sectionName: sectionName, itemName: itemName, document: document});
-        }
+        }*/
 
         return service;
 
     }])
 
-    .service("navMenuService", ["socket", "$http", "$location", "$q", "$routeParams", function(socket, $http, $location, Q, $routeParams){
+    .service("navMenuService", ["socket", "$http", "$location", "$q", "$routeParams", "wire", "$rootScope", function(socket, $http, $location, Q, $routeParams, Wire, $rootScope){
 
 
 
@@ -81,6 +90,32 @@ angular.module("services", [])
         }
 
         var service = {};
+
+        /*service.wire = Wire.getInstance({
+            socketPrefix: "sections",
+            entity: service,
+            collection: "parts",
+            init: true,
+            callbacks: {
+                get: function(data){
+                    service.connection = {on: true};
+                },
+                put: function(data){
+                    service.parts.sections.push(data.name);
+                    service.newSection = "";
+                },
+                after: function(data, method){          //after a socket event, we update location
+                    if(method == "get"){
+                        service.updateLocation();
+                        $rootScope.$on("$routeChangeSuccess", function(){
+                            service.updateLocation();
+                        })
+                    }
+                }
+            }
+        });*/
+
+
         /**
          * Updates the URL, based on the menu settings
          */

@@ -4,11 +4,32 @@
  * Time: 2:04 PM
  */
 angular.module("DocumentsController", [])
-    .controller("DocumentsCtrl", ["$scope", "$location", "documents", "socket", "wire", function($scope, $location, documents, socket, Wire){
-        $scope.part = $location.search().s;
-        $scope.section = $location.search().ss;
+    .controller("DocumentsCtrl", ["$scope", "$routeParams", "documents", "navMenuService", function($scope, $routeParams, documents, navMenu){
+        //$scope.part = $location.search().s;
+        //$scope.section = $location.search().ss;
 
-        $scope.documents = documents;
+
+        $scope.documents = documents;           //this gives me access to the wire, the collection, etc.
+
+        //navMenu.findSubsectionAndDoSomething($routeParams.sectionName, {name: $routeParams.subSectionName},
+        //    function(section, subSection, index){
+                documents.wire.subscribe("/"+$routeParams.sectionName + "/" + $routeParams.subSectionName).then(function(){
+                    documents.wire.get({sectionName: $routeParams.sectionName, subSectionName: $routeParams.subSectionName});
+                })
+            //}
+        //)
+
+
+
+        $scope.deleteDocument = function(document){
+            navMenu.findSubsectionAndDoSomething($routeParams.sectionName, {name: $routeParams.subSectionName}, function(section, subSection){
+                documents.wire.delete({id: subSection._id, subSectionName: $routeParams.subSectionName, sectionName: $routeParams.sectionName, name: document.name });
+            })
+
+        }
+        $scope.$on("$destroy", function(){
+            documents.wire.unsubscribe();
+        })
 
         /*$scope.wire = Wire.getInstance({
             service: documents,

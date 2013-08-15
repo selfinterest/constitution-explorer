@@ -1,5 +1,5 @@
 angular.module("filters", []).
-    filter("markReferences", ["references", function(references){
+    filter("markReferences", ["documents", function(documents){
         /**
          * Items are the items to be marked. We mark those for which a reference exists.
          */
@@ -11,8 +11,8 @@ angular.module("filters", []).
                 filename = item._source.filename;
                 items[index].referenced = false;
                 i = 0;
-                while(items[index].referenced == false && i < references.items.length){
-                    items[index].referenced = references.items[i].filename == filename;
+                while(items[index].referenced == false && i < documents.filenames.length){
+                    items[index].referenced = documents.filenames[i].name == filename;
                     i++;
                 }
             });

@@ -480,31 +480,60 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
         return deferred.promise;
     }
 
-    subSectionSchema.statics.getAllDocuments = function(name){
+    subSectionSchema.statics.getAllDocuments = function(sectionName, subSectionName){
         var deferred = Q.defer();
-        this.findOne({name: name})
-            .exec(function(err, subSection){
-                deferred.resolve(subSection);
+        Models.section.findOne({name: sectionName})
+            .populate({path: "subSections", model: Models.subSection, select: "-filenames.references"})
+            //.populate("subSections", {match: {"$elemMatch": {name: subSectionName }} })
+            .exec(function(err, section){
+                if(section){
+                    var subSection = _.findWhere(section.subSections, {name: subSectionName});
+                    deferred.resolve(subSection.filenames);
+                }
             });
+        /*this.findOne({name: name})
+            .exec(function(err, subSection){
+                deferred.resolve(subSection.filenames);
+            });*/
         return deferred.promise;
     }
 
-    subSectionSchema.statics.putDocument = function(subSectionName, document){
+    subSectionSchema.statics.putDocument = function(subSectionId, document){
         var deferred = Q.defer();
         var model = this;
-        console.log("Creating document: %s %o", subSectionName, document);
+        //console.log("Creating document: %s %o", subSectionName, document);
         //console.log(arguments);
-        this.findOneAndUpdate(
-            {name: subSectionName},
+        this.findByIdAndUpdate(
+            subSectionId,
             {$push:
                 {
                     filenames: {name: document.filename, title: document.title, references: []}
                 }
             }).exec(function(){
-                model.getAllDocuments(subSectionName).then(function(subSection){
-                    deferred.resolve(subSection);
+                model.findById(subSectionId, "-filenames.references", function(err, subSection){
+                    deferred.resolve(subSection.filenames);
                 })
             })
+        return deferred.promise;
+    }
+
+    subSectionSchema.statics.deleteDocument = function(subSectionId, name){
+        var deferred = Q.defer();
+        var model = this;
+        this.findByIdAndUpdate(
+            subSectionId,
+            {$pull:
+                {
+                    filenames: {name: name}
+                }
+
+            }).exec(function(){
+                model.findById(subSectionId, "-filenames.references", function(err, subSection){
+                    deferred.resolve(subSection.filenames);
+                })
+            }
+        )
+
         return deferred.promise;
     }
 

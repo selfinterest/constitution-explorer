@@ -32,6 +32,8 @@ angular.module("NavController", [])
                         })
                     }
                 }
+            }
+        })
                 /*after: function(data){
                     //We got sections, or put a new one in. Do a menu check.
                     var sectionName = $routeParams.sectionName, subSectionName = $routeParams.subSectionName;
@@ -56,8 +58,8 @@ angular.module("NavController", [])
 
 
                 }*/
-            }
-        });
+        //    }
+        //});
 
 
 
@@ -105,7 +107,7 @@ angular.module("NavController", [])
         }
 
         $scope.$on("$destroy", function(){
-            $scope.wire.removeListeners();
+            navMenu.wire.removeListeners();
             $scope.subSectionWire.removeListeners();
         })
 
