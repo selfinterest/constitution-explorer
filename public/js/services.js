@@ -126,13 +126,16 @@ angular.module("services", [])
          * Updates the URL, based on the menu settings
          */
         service.updateLocation = function(){
-            console.log("Updating location");
+
             var sectionName = $routeParams.sectionName, subSectionName = $routeParams.subSectionName;
             try {
                 service.findSubsectionAndDoSomething(sectionName, {name: subSectionName}, function(section, subSection, index){
                     service.activeId = subSection._id;
                     service.deferred.resolve(service.activeId);
                 })
+
+
+
             } catch (e){
                 /*if(e.indexOf("Subsection") > -1){           //the subsection no longer exists
 

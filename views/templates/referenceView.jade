@@ -3,22 +3,40 @@ div
     h4 Reference for
         a(ng-href='http://www.primarydocuments.ca/documents/{{document.name}}', target="_blank")  {{document.title}}
     h5(ng-show="referenceId='_null'") New entry
-    form(ng-model="newReference")
+    form(name="referenceForm")
         fieldset
-            legend Fields
-            div.span5
-                label Title
+            div.span6
+                legend Mandatory fields
+                label Title*
                 div.input-append
-                    input(type="text", name="title", ng-model="title").input-xlarge
-                    button(ng-click="title = document.title").btn: i.icon-refresh
+                    input(type="text", name="title", ng-model="reference.title", required).input-xxlarge
+                    button(ng-click="reference.title = document.title").btn: i.icon-refresh
                 span.help-block This title may be used for display and search.
+                label Pages*
+                input(type="text", ng-model="reference.pages", required).input-xlarge
+                span.help-block You can use ranges, e.g. 1, 2, 5-7 (comma separated.)
+                label PDF pages*
+                input(type="text", ng-model="reference.pdfPages", required).input-xlarge
+                span.help-block The PDF page references.
+                label Full reference*
+                input(type="text", ng-model="reference.full", required).input-xxlarge
+                span.help-block The full, properly formatted reference. Take care as this will be used for display.
+            div.span6
+                legend Optional fields
                 label Lines
-                input(type="text").input-xlarge
-            div.span5
-                label Page
-                input(type="text").input-xlarge
-                span.help-block You can use ranges, e.g. 1, 2, 5-7
-                label PDF page
-                input(type="text").input-xlarge
-
-    a(ng-href="/{{sectionName}}/{{subSectionName}}").btn.btn-primary.offset10 Return
+                input(type="text", ng-model="reference.lines").input-xlarge
+                span.help-block You can use ranges here, too.
+                label Pargraphs
+                input(type="text", ng-model="reference.paragraphs").input-xlarge
+                label Volume
+                input(type="text", ng-model="reference.volume").input-xlarge
+                label Date
+                div.input-append
+                    input(type="text", datepicker-popup="dd-MMMM-yyyy", ng-model="dt", open="opened", show-weeks="false").input-xlarge
+                    button(ng-click="open()").btn: i.icon-calendar
+                    //b   {{dt | date:'yyyy (MMMM d)'}}
+                    //b {{dt | date:'fullDate'}}
+                    //datepicker(ng-model="dt", show-weeks="false")
+        div.form-actions.btn-group
+            button(type="submit", ng-click="submit()").btn.btn-primary.input-medium Submit
+            a(ng-href="/{{sectionName}}/{{subSectionName}}").btn Cancel

@@ -16,7 +16,7 @@ div(ng-show='documents.filenames.length > 0')
                 form(ng-show="item.editing").input-append
                     input(type="text", ng-model="item.lines")
                     button(ng-click="references.editLine(part, section, item, true)").btn Submit
-            td.icons.span1: a(ng-href="/{{sectionName}}/{{subSectionName}}/{{item.name}}").icon-pencil
+            td.icons.span1: a(ng-href="/{{sectionName}}/{{subSectionName}}/{{item.name}}").icon-plus
 //i(ng-repeat='line in item.pages').icon-remove {{line}}
 //form.input-append
 //    input(type="text", ng-model="item.line").span4

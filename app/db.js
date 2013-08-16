@@ -17,17 +17,19 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
 
     var referenceSchema = new Schema({
         //filename: {type: String, required: true},
-        title: {type: String},
+        title: {type: String, required: true},
         lines: {type: String},
         paragraph: {type: String},
-        pdfPage: {type: Number},
-        page: {type: Number},
+        pdfPages: {type: String, required: true},
+        pages: {type: String, required: true},
         volume: {type: String},
-        full: {type: String}
+        full: {type: String, required: true},
+        date: {type: Date},
+        filename: {type: String, required: true}        //store this, but don't get it from the user
     });
 
     var filenameSchema = new Schema({
-        name: {type: String, required: true, unique: true, dropDups: true, sparse: true}, //, unique: true, sparse: true, dropDups: true},
+        name: {type: String, required: true},// unique: true, dropDups: true, sparse: true}, //, unique: true, sparse: true, dropDups: true},
         title: {type: String, required: true},// unique: true, sparse: true, dropDups: true},
         references: [{type: Schema.Types.ObjectId, ref: "Reference"}]
     });

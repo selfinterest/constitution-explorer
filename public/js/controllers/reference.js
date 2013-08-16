@@ -6,7 +6,7 @@
  * To change this template use File | Settings | File Templates.
  */
 angular.module("ReferenceController", [])
-    .controller("ReferenceCtrl", ["$scope", "wire", "$routeParams", "navMenuService", "$q", "$http", function($scope, wire, $routeParams, navMenu, Q, $http){
+    .controller("ReferenceCtrl", ["$scope", "wire", "$routeParams", "navMenuService", "$q", "$http", "$timeout", function($scope, wire, $routeParams, navMenu, Q, $http, $timeout){
         /*$scope.wire = wire.getInstance({
             entity: $scope,
             collection: "references",
@@ -34,4 +34,21 @@ angular.module("ReferenceController", [])
             })
         })
 
+        /* Opens date picker */
+        $scope.open = function() {
+            $timeout(function() {
+                $scope.opened = !$scope.opened;
+            });
+        };
+
+        $scope.submit = function(){
+            console.log("Submitting");
+            console.log($scope.referenceForm);
+        }
+
+        //$scope.numbersAndDashes = /[\d|\s]+/; //"[0-9|\,|\s]";
+
+        $scope.numbersAndDashes = /[0-9\-]+/;
+       // $scope.numbersAndDashes = /^\d(?:[-\s]?\d){6,11}$/;
+        //$scope.numberAndDsahes = /^(?=[^ ]* ?[^ ]*(?: [^ ]*)?$)(?=[^-]*-?[^-]*$)(?=[^,]*,?[^,]*$)[a-zA-Z0-9 ,-]*$/;
 }]);
