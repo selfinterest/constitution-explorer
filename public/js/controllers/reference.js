@@ -6,7 +6,7 @@
  * To change this template use File | Settings | File Templates.
  */
 angular.module("ReferenceController", [])
-    .controller("ReferenceCtrl", ["$scope", "wire", "$routeParams", "navMenuService", "$q", "$http", "$timeout", function($scope, wire, $routeParams, navMenu, Q, $http, $timeout){
+    .controller("ReferenceCtrl", ["$scope", "wire", "$routeParams", "navMenuService", "$q", "$http", "$timeout", "$location", function($scope, wire, $routeParams, navMenu, Q, $http, $timeout, $location){
         /*$scope.wire = wire.getInstance({
             entity: $scope,
             collection: "references",
@@ -25,25 +25,39 @@ angular.module("ReferenceController", [])
 
         $scope.referenceId = angular.isDefined($routeParams.referenceId) ? $routeParams.referenceId : "_null";
 
+
+
         navMenu.getPromise().then(function(subSectionId){
             $scope.subSectionId = navMenu.activeId;
             var filename = $routeParams.filename;
             $http.get("/api/references/"+$scope.referenceId + "?sectionName="+$scope.sectionName + "&subSectionId="+$scope.subSectionId + "&filename="+filename).success(function(obj){
                 $scope.reference = obj.reference;
+                if(!angular.isDefined($scope.reference.filename)) $scope.reference.filename = filename;
                 $scope.document = obj.document;
             })
-        })
+        });
 
         /* Opens date picker */
         $scope.open = function() {
             $timeout(function() {
-                $scope.opened = !$scope.opened;
+                $scope.opened = true;
             });
         };
 
         $scope.submit = function(){
-            console.log("Submitting");
-            console.log($scope.referenceForm);
+            var data = {reference: $scope.reference, sectionName: $scope.sectionName, subSectionName: $scope.subSectionName, subSectionId: $scope.subSectionId};
+
+            if($scope.referenceId == "_null"){
+                $http.put("/api/references", data)
+                    .success(function(reference){
+                        $location.path("/"+$scope.sectionName + "/" + $scope.subSectionName);
+                    })
+            } else {
+                $http.post("/api/references/"+$scope.referenceId, data)
+                    .success(function(reference){
+                        $location.path("/"+$scope.sectionName + "/" + $scope.subSectionName);
+                    })
+            }
         }
 
         //$scope.numbersAndDashes = /[\d|\s]+/; //"[0-9|\,|\s]";

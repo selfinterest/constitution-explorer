@@ -2,7 +2,7 @@
 div
     h4 Reference for
         a(ng-href='http://www.primarydocuments.ca/documents/{{document.name}}', target="_blank")  {{document.title}}
-    h5(ng-show="referenceId='_null'") New entry
+    h5(ng-show="referenceId=='_null'") New entry
     form(name="referenceForm")
         fieldset
             div.span6
@@ -32,7 +32,7 @@ div
                 input(type="text", ng-model="reference.volume").input-xlarge
                 label Date
                 div.input-append
-                    input(type="text", datepicker-popup="dd-MMMM-yyyy", ng-model="dt", open="opened", show-weeks="false").input-xlarge
+                    input(type="text", datepicker-popup="dd-MMMM-yyyy", ng-model="reference.date", open="opened", show-weeks="false").input-xlarge
                     button(ng-click="open()").btn: i.icon-calendar
                     //b   {{dt | date:'yyyy (MMMM d)'}}
                     //b {{dt | date:'fullDate'}}

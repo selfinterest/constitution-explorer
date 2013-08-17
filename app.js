@@ -81,7 +81,7 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                 var template = req.params.template;
                 res.render("templates/"+template, function(err, html){
                     if(!err)
-                        res.send(html)
+                        res.send(html);
                     else {
                         console.log(err);
                         res.send(404);       //not found. This really shouldn't happen!
@@ -97,6 +97,8 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
 
 
             app.get("/api/references/:referenceId", references.get);
+            app.put("/api/references", references.put);
+            app.post("/api/references/:referenceId", references.post);
             //app.get("/api/references/:part/:section", references.get);
             //app.put("/api/references/:part/:section/:filename", references.put);
 
@@ -317,7 +319,8 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                     console.log("Getting documents");
                     var sectionName = req.data.sectionName;
                     var subSectionName = req.data.subSectionName;
-                    db.Models.subSection.getAllDocuments(sectionName, subSectionName).then(function(documents){
+                    var subSectionId = req.data.subSectionId;
+                    db.Models.subSection.getAllDocuments(sectionName, subSectionName, subSectionId).then(function(documents){
                         //console.log(filenames);
                         console.log(documents);
                         req.io.emit("documents:get", documents);

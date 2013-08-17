@@ -11,13 +11,17 @@ angular.module("DocumentsController", [])
 
         $scope.documents = documents;           //this gives me access to the wire, the collection, etc.
 
+        navMenu.getPromise().then(function(){
+            documents.wire.subscribe("/"+$routeParams.sectionName + "/" + $routeParams.subSectionName).then(function(){
+                documents.wire.get({sectionName: $routeParams.sectionName, subSectionName: $routeParams.subSectionName, subSectionId: navMenu.activeId});
+                $scope.sectionName = $routeParams.sectionName;
+                $scope.subSectionName = $routeParams.subSectionName;
+                $scope.subSectionId = navMenu.activeId;
+            });
+        });
         //navMenu.findSubsectionAndDoSomething($routeParams.sectionName, {name: $routeParams.subSectionName},
         //    function(section, subSection, index){
-                documents.wire.subscribe("/"+$routeParams.sectionName + "/" + $routeParams.subSectionName).then(function(){
-                    documents.wire.get({sectionName: $routeParams.sectionName, subSectionName: $routeParams.subSectionName});
-                    $scope.sectionName = $routeParams.sectionName;
-                    $scope.subSectionName = $routeParams.subSectionName;
-                })
+
             //}
         //)
 

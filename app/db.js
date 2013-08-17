@@ -61,7 +61,8 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
             if(err) winston.error(err);
             next();
         })
-    })
+    });
+
 
     /*subSectionSchema.pre("remove", function(next){
         _.each(this.filenames, function(filename){
@@ -482,24 +483,31 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
         return deferred.promise;
     }
 
-    subSectionSchema.statics.getAllDocuments = function(sectionName, subSectionName){
+    subSectionSchema.statics.getAllDocuments = function(sectionName, subSectionName, subSectionId){
         var deferred = Q.defer();
-        Models.section.findOne({name: sectionName})
-            .populate({path: "subSections", model: Models.subSection, select: "-filenames.references"})
+
+        this.findById(subSectionId)
+            .populate({path: "filenames.references"})
+            .exec(function(err, subSection){
+                deferred.resolve(subSection.filenames);
+            });
+        /*Models.section.findOne({name: sectionName})
+            .populate({path: "subSections", model: Models.subSection, select: {"filenames.references": false}})
             //.populate("subSections", {match: {"$elemMatch": {name: subSectionName }} })
             .exec(function(err, section){
                 if(section){
                     var subSection = _.findWhere(section.subSections, {name: subSectionName});
                     if(subSection) {
-                        deferred.resolve(subSection.filenames);
+                        subSection.populate({path: "references", model: Models.reference}, function(err, subSection){
+
+                            deferred.resolve(subSection.filenames);
+                        })
                     } else {
                         deferred.reject("HMM!");
                     }
+                } else {
+                    deferred.reject("HMM!");
                 }
-            });
-        /*this.findOne({name: name})
-            .exec(function(err, subSection){
-                deferred.resolve(subSection.filenames);
             });*/
         return deferred.promise;
     }
@@ -540,6 +548,62 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
             }
         )
 
+        return deferred.promise;
+    }
+
+    referenceSchema.statics.putReference = function(reference, subSectionId){
+        var deferred = Q.defer();
+
+        try {
+            Models.reference.create(reference, function(err, reference){
+                if(err){
+                    err.reference = reference;
+                    throw new Error(err);
+                }
+                Models.subSection.findOneAndUpdate({"_id": subSectionId, "filenames.name": reference.filename},
+                    {"$push":
+                    {"filenames.$.references": reference._id}
+                    }
+                ).exec(function(err){
+                    if(err){
+                        err.reference = reference;
+                        throw new Error(err);
+                    } else {
+                        deferred.resolve(reference);
+                    }
+                })
+            });
+        } catch (e){
+            //delete the reference, if one was made
+            if(e.reference){
+                e.reference.remove(function(){
+                    deferred.reject(e);
+                })
+            } else {
+                deferred.reject(e);
+            }
+        }
+
+        /*var referenceModel = new Models.reference(reference);
+        try {
+            Models.subSection.findByIdAndUpdate(subSectionId, {""} function(err, subSection){
+                if(err) deferred.reject(new Error(err));
+                _.each(subSection.filenames, function(filename, i){
+                    if(filename.name == reference.filename){
+                        referenceModel.save(function(err, referenceModel){
+                            if(err) deferred.reject(new Error(err));
+                            subSection.filenames[i].references.push(referenceModel._id);
+                            subSection.save(function(err){
+                                if(err) deferred.reject(new Error(err));
+                                deferred.resolve(referenceModel);
+                            });
+                        })
+                    }
+                });
+            });
+        } catch (e){
+            deferred.reject(new Error(e));
+        }*/
         return deferred.promise;
     }
 

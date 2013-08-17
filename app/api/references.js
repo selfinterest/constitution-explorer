@@ -54,15 +54,27 @@ define(["app/db", "underscore", "async", "q"], function(db, _, async, Q){
         },
 
         put: function(req, res){
-            var section = req.params.part;
-            var subSection = req.params.section;
-            var filename = req.params.filename;
-            var title = req.body.title;
-            db.Models.section.putReference(section, subSection, filename, title).then(function(results){
-                //Look up the reference we JUST ADDED because of stupid reasons
-                db.Models.section.findReferenceByFilename(section, subSection, filename).then(function(results){
+            var reference = req.body.reference;
+            var subSectionId = req.body.subSectionId;
+            db.Models.reference.putReference(reference, subSectionId)
+                .then(
+                    function(reference){
+                        res.send(reference);
+                    },
+                    function(err){
+                        res.status(400).send(err);
+                    }
+            );
 
-                })
+        },
+
+        post: function(req, res){
+            var referenceId = req.params.referenceId;
+            var reference = req.body.reference;
+            delete reference._id;           //have to delete the id, boo.
+            db.Models.reference.findByIdAndUpdate(referenceId, reference, function(err, reference){
+                console.log(err);
+                res.send(reference);
             });
         }
     }
