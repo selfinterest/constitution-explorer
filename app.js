@@ -299,6 +299,37 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
 
                     })
 
+                },
+                put: function(req){
+                    var sectionName = req.data.sectionName;
+                    var subSectionName = req.data.subSectionName;
+                    var reference = req.data.reference;
+                    var subSectionId = req.data.subSectionId;
+                    db.Models.reference.putReference(reference, subSectionId)
+                        .then(
+                        function(reference){
+                            //res.send(reference);
+                            req.io.emit("reference:put", reference);                                                        //this goes to the current client, redirecting him to the main page
+                            app.io.room("/"+sectionName + "/" + subSectionName).broadcast("reference:put", reference);      //this goes to all clients in the room, telling them to update their views
+                        },
+                        function(err){
+                            req.io.emit("reference:error", err );
+                        }
+                    );
+                },
+                post: function(req){
+                    var sectionName = req.data.sectionName;
+                    var subSectionName = req.data.subSectionName;
+                    var reference = req.data.reference;
+                    var subSectionId = req.data.subSectionId;
+                    var referenceId = reference._id;
+                    delete reference._id;
+                    db.Models.reference.findByIdAndUpdate(referenceId, reference, function(err, reference){
+                        console.log(err);
+                        req.io.emit("reference:post", reference);
+                        app.io.room("/"+sectionName + "/" + subSectionName).broadcast("reference:post", reference);
+                        //res.send(reference);
+                    });
                 }
             });
             app.io.route("references", {

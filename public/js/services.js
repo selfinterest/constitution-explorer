@@ -243,19 +243,6 @@ angular.module("services", [])
          * Tries to keep the menu and URL in sync with the application state.
          * Example: if an item is deleted, the menu and the URL may have to change.
          */
-        function checkMenu(){
-            var locationItem = $location.search().ss;
-            var locationSection = $location.search().s;
-            var item = _.findWhere(service.parts.items[locationSection], {name: locationItem });
-
-            if(!item){
-                $location.replace();
-                service.flags.active.section = null;
-                service.flags.active.item = null;
-                $location.search("s", null);
-                $location.search("ss", null);
-            }
-        }
 
         var service = {};
 
@@ -298,8 +285,11 @@ angular.module("services", [])
             var sectionName = $routeParams.sectionName, subSectionName = $routeParams.subSectionName;
             try {
                 service.findSubsectionAndDoSomething(sectionName, {name: subSectionName}, function(section, subSection, index){
-                    service.activeId = subSection._id;
-                    service.deferred.resolve(service.activeId);
+                    //$rootScope.$apply(function(){
+                        service.activeId = subSection._id;
+                        service.deferred.resolve(service.activeId);
+                    //})
+
                 })
 
 

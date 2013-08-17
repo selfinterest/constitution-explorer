@@ -4,10 +4,12 @@
  * Time: 2:04 PM
  */
 angular.module("DocumentsController", [])
-    .controller("DocumentsCtrl", ["$scope", "$routeParams", "documents", "navMenuService", function($scope, $routeParams, documents, navMenu){
-        //$scope.part = $location.search().s;
-        //$scope.section = $location.search().ss;
+    .controller("DocumentsCtrl", ["$scope", "$routeParams", "documents", "navMenuService", "wire", function($scope, $routeParams, documents, navMenu, Wire){
+        
 
+        $scope.referenceWire = Wire.getInstance({
+
+        });
 
         $scope.documents = documents;           //this gives me access to the wire, the collection, etc.
 
@@ -33,6 +35,7 @@ angular.module("DocumentsController", [])
             })
 
         }
+
         $scope.$on("$destroy", function(){
             documents.wire.unsubscribe();
         })

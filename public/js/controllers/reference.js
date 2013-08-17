@@ -13,11 +13,11 @@ angular.module("ReferenceController", [])
             socketPrefix: "reference",
             init: false,
             callbacks: {
-                put: function(){
-
+                put: function(data){
+                    $location.path("/"+$scope.sectionName + "/" + $scope.subSectionName);
                 },
                 post: function(){
-
+                    $location.path("/"+$scope.sectionName + "/" + $scope.subSectionName);
                 }
             }
         });
@@ -34,8 +34,23 @@ angular.module("ReferenceController", [])
         $scope.referenceId = angular.isDefined($routeParams.referenceId) ? $routeParams.referenceId : "_null";
 
 
+        function wrap(subSectionId){
+            var deferred = Q.defer();
+            $scope.subSectionId = navMenu.activeId;
+            var filename = $routeParams.filename;
+            return "/api/references/"+$scope.referenceId + "?sectionName="+$scope.sectionName + "&subSectionId="+$scope.subSectionId + "&filename="+filename;
 
-        navMenu.getPromise().then(function(subSectionId){
+        }
+
+        navMenu.getPromise()
+            .then(wrap)
+            .then($http.get)
+            .then(function(data){
+                $scope.reference = data.data.reference;
+                $scope.document = data.data.document;
+                $scope.reference.filename = $routeParams.filename;
+            });
+        /*navMenu.getPromise().then(function(subSectionId){
             $scope.subSectionId = navMenu.activeId;
             var filename = $routeParams.filename;
             //$scope.wire.get({referenceId: $scope.referenceId, sectionName: $scope.sectionName, subSectionName: $scope.subSectionName, subSectionId: $scope.subSectionId, filename: filename});
@@ -44,7 +59,7 @@ angular.module("ReferenceController", [])
                 if(!angular.isDefined($scope.reference.filename)) $scope.reference.filename = filename;
                 $scope.document = obj.document;
             })
-        });
+        });*/
 
         /* Opens date picker */
         $scope.open = function() {
@@ -70,6 +85,10 @@ angular.module("ReferenceController", [])
                 $scope.wire.post(data);
             }
         }
+
+        $scope.$on("$destroy", function(){
+            $scope.wire.removeListeners();
+        });
 
         //$scope.numbersAndDashes = /[\d|\s]+/; //"[0-9|\,|\s]";
 
