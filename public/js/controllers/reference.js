@@ -7,12 +7,20 @@
  */
 angular.module("ReferenceController", [])
     .controller("ReferenceCtrl", ["$scope", "wire", "$routeParams", "navMenuService", "$q", "$http", "$timeout", "$location", function($scope, wire, $routeParams, navMenu, Q, $http, $timeout, $location){
-        /*$scope.wire = wire.getInstance({
+        $scope.wire = wire.getInstance({
             entity: $scope,
-            collection: "references",
-            socketPrefix: "references",
-            init: false
-        });*/
+            collection: "reference",
+            socketPrefix: "reference",
+            init: false,
+            callbacks: {
+                put: function(){
+
+                },
+                post: function(){
+
+                }
+            }
+        });
 
         $scope.sectionName = $routeParams.sectionName;
         $scope.subSectionName = $routeParams.subSectionName;
@@ -30,6 +38,7 @@ angular.module("ReferenceController", [])
         navMenu.getPromise().then(function(subSectionId){
             $scope.subSectionId = navMenu.activeId;
             var filename = $routeParams.filename;
+            //$scope.wire.get({referenceId: $scope.referenceId, sectionName: $scope.sectionName, subSectionName: $scope.subSectionName, subSectionId: $scope.subSectionId, filename: filename});
             $http.get("/api/references/"+$scope.referenceId + "?sectionName="+$scope.sectionName + "&subSectionId="+$scope.subSectionId + "&filename="+filename).success(function(obj){
                 $scope.reference = obj.reference;
                 if(!angular.isDefined($scope.reference.filename)) $scope.reference.filename = filename;
@@ -48,15 +57,17 @@ angular.module("ReferenceController", [])
             var data = {reference: $scope.reference, sectionName: $scope.sectionName, subSectionName: $scope.subSectionName, subSectionId: $scope.subSectionId};
 
             if($scope.referenceId == "_null"){
-                $http.put("/api/references", data)
+                $scope.wire.put(data);
+                /*$http.put("/api/references", data)
                     .success(function(reference){
                         $location.path("/"+$scope.sectionName + "/" + $scope.subSectionName);
-                    })
+                    })*/
             } else {
-                $http.post("/api/references/"+$scope.referenceId, data)
+                /*$http.post("/api/references/"+$scope.referenceId, data)
                     .success(function(reference){
                         $location.path("/"+$scope.sectionName + "/" + $scope.subSectionName);
-                    })
+                    })*/
+                $scope.wire.post(data);
             }
         }
 

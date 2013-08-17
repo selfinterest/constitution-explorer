@@ -59,7 +59,8 @@ define(["app/db", "underscore", "async", "q"], function(db, _, async, Q){
             db.Models.reference.putReference(reference, subSectionId)
                 .then(
                     function(reference){
-                        res.send(reference);
+                        //res.send(reference);
+                        req.io.route("references:put", reference);
                     },
                     function(err){
                         res.status(400).send(err);
@@ -74,7 +75,8 @@ define(["app/db", "underscore", "async", "q"], function(db, _, async, Q){
             delete reference._id;           //have to delete the id, boo.
             db.Models.reference.findByIdAndUpdate(referenceId, reference, function(err, reference){
                 console.log(err);
-                res.send(reference);
+                req.io.route("references:post");
+                //res.send(reference);
             });
         }
     }

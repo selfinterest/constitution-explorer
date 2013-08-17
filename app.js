@@ -117,11 +117,12 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
          * @param callback
          */
         function(callback){
-            winston.info("Starting http server on port "+commandLn.port);
             app.http().io();
+            winston.info("Starting http server on port "+commandLn.port);
+
 
             app.io.set("authorization", function(handshakeData, accept){
-                console.log(arguments);
+
                 var cookie = require("cookie");
                 var connect = require("connect");
                 if (handshakeData.headers.cookie) {
@@ -145,7 +146,7 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                     return accept('No cookie transmitted.', false);
                 }
 
-                accept(null, true);
+                return accept(null, true);
             });
 
             app.listen(commandLn.port);
@@ -260,6 +261,46 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                 }
             });
 
+            app.io.route("reference", {
+                "get": function(req){
+                    var sectionName = req.data.sectionName;
+                    var subSectionName = req.data.subSectionName;
+                    var filename = req.data.filename;
+                    var subSectionId = req.data.subSectionId;
+                    var referenceId = req.data.referenceId != "_null" ? req.data.referenceId : null;
+                    function getReference(referenceId){
+                        var deferred = Q.defer();
+
+                        if(referenceId){     // looking up the reference
+                            db.Models.reference.findById(referenceId, function(err, r){
+                                deferred.resolve(r);
+                            })
+                        } else {
+                            deferred.resolve({});
+                        }
+
+                        return deferred.promise;
+                    }
+
+                    function getDocument(subSectionId, filename){
+
+                        var deferred = Q.defer();
+
+                        db.Models.subSection.findById(subSectionId, "-references", function(err, subSection){
+                            if(err) console.log(err);
+                            deferred.resolve(_.findWhere(subSection.filenames, {name: filename }));
+                        });
+
+                        return deferred.promise;
+                    }
+
+                    var Q = require("q");
+                    Q.all(getReference(referenceId), getDocument(subSectionId, filename)).then(function(){
+
+                    })
+
+                }
+            });
             app.io.route("references", {
                 "get": function(req){
                     var sectionName = req.data.sectionName;
@@ -322,7 +363,6 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                     var subSectionId = req.data.subSectionId;
                     db.Models.subSection.getAllDocuments(sectionName, subSectionName, subSectionId).then(function(documents){
                         //console.log(filenames);
-                        console.log(documents);
                         req.io.emit("documents:get", documents);
                     })
                 },
@@ -342,7 +382,6 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
 
                     db.Models.subSection.putDocument(subSectionId, document).then(function(filenames){
 
-                        console.log(filenames);
                         app.io.room("/"+sectionName + "/" + subSectionName).broadcast("documents:get", filenames);
                         //app.io.broadcast("documents:get", {documents: subSection.filenames});
                     })
