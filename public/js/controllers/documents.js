@@ -5,10 +5,27 @@
  */
 angular.module("DocumentsController", [])
     .controller("DocumentsCtrl", ["$scope", "$routeParams", "documents", "navMenuService", "wire", function($scope, $routeParams, documents, navMenu, Wire){
-        
+
 
         $scope.referenceWire = Wire.getInstance({
-
+            entity: $scope,
+            collection: "reference",
+            socketPrefix: "reference",
+            init: false,
+            callbacks: {
+                put: function(data){            //add the reference
+                    var document = _.findWhere($scope.documents.filenames, {name: data.filename});
+                    var index = _.indexOf($scope.documents.filenames, document);
+                    $scope.documents.filenames[index].references.push(data);
+                },
+                post: function(data){           //replace the reference
+                   var document = _.findWhere($scope.documents.filenames, {name: data.filename});
+                   var index = _.indexOf($scope.documents.filenames, document);
+                   var r = _.findWhere($scope.documents.filenames[index].references, {_id: data._id});
+                   var i = _.indexOf($scope.documents.filenames[index].references, r);
+                   $scope.documents.filenames[index].references[i] = data;
+                }
+            }
         });
 
         $scope.documents = documents;           //this gives me access to the wire, the collection, etc.
@@ -19,6 +36,7 @@ angular.module("DocumentsController", [])
                 $scope.sectionName = $routeParams.sectionName;
                 $scope.subSectionName = $routeParams.subSectionName;
                 $scope.subSectionId = navMenu.activeId;
+                $scope.referenceWire.subscribe("/"+$scope.sectionName + "/" + $scope.subSectionName);
             });
         });
         //navMenu.findSubsectionAndDoSomething($routeParams.sectionName, {name: $routeParams.subSectionName},
@@ -38,6 +56,8 @@ angular.module("DocumentsController", [])
 
         $scope.$on("$destroy", function(){
             documents.wire.unsubscribe();
+            $scope.referenceWire.unsubscribe();
+            $scope.referenceWire.removeListeners();
         })
 
         /*$scope.wire = Wire.getInstance({
