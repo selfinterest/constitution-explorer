@@ -34,9 +34,10 @@ div
                 div.input-append
                     input(type="text", datepicker-popup="dd-MMMM-yyyy", ng-model="reference.date", open="opened", show-weeks="false").input-xlarge
                     button(ng-click="open()").btn: i.icon-calendar
-                    //b   {{dt | date:'yyyy (MMMM d)'}}
-                    //b {{dt | date:'fullDate'}}
-                    //datepicker(ng-model="dt", show-weeks="false")
-        div.form-actions.btn-group
+    div.form-actions
+        div.btn-group
             button(type="submit", ng-click="submit()").btn.btn-primary.input-medium Submit
             a(ng-href="/{{sectionName}}/{{subSectionName}}").btn Cancel
+        button(ng-click="delete()", ng-show="referenceId != '_null'").btn.btn-danger.offset7
+            i.icon-remove.icon-white
+            |  Delete

@@ -7,6 +7,15 @@ angular.module("DocumentsController", [])
     .controller("DocumentsCtrl", ["$scope", "$routeParams", "documents", "navMenuService", "wire", function($scope, $routeParams, documents, navMenu, Wire){
 
 
+        function findReferenceAndDoSomething(reference, callback) {
+            var document = _.findWhere($scope.documents.filenames, {name: reference.filename});
+            var index = _.indexOf($scope.documents.filenames, document);
+            var r = _.findWhere($scope.documents.filenames[index].references, {_id: reference._id});
+            var i = _.indexOf($scope.documents.filenames[index].references, r);
+            callback({reference: $scope.documents.filenames[index].references[i], documentIndex: index, referenceIndex: i});
+            //return {index: index, i: i};
+        }
+
         $scope.referenceWire = Wire.getInstance({
             entity: $scope,
             collection: "reference",
@@ -16,14 +25,24 @@ angular.module("DocumentsController", [])
                 put: function(data){            //add the reference
                     var document = _.findWhere($scope.documents.filenames, {name: data.filename});
                     var index = _.indexOf($scope.documents.filenames, document);
+                    if(!angular.isDefined($scope.documents.filenames[index].references)) $scope.documents.filenames[index].references = [];
                     $scope.documents.filenames[index].references.push(data);
                 },
-                post: function(data){           //replace the reference
-                   var document = _.findWhere($scope.documents.filenames, {name: data.filename});
-                   var index = _.indexOf($scope.documents.filenames, document);
-                   var r = _.findWhere($scope.documents.filenames[index].references, {_id: data._id});
-                   var i = _.indexOf($scope.documents.filenames[index].references, r);
-                   $scope.documents.filenames[index].references[i] = data;
+                post: function(data) {           //replace the reference
+                    findReferenceAndDoSomething(data, function(obj){
+                        $scope.documents.filenames[obj.documentIndex].references[obj.referenceIndex] = data;
+
+                    })
+                    /*var __ret = findReferenceAndDoSomething();
+                    var index = __ret.index;
+                    var i = __ret.i;
+                    $scope.documents.filenames[index].references[i] = data;*/
+                },
+                delete: function(data){
+                    findReferenceAndDoSomething(data, function(obj){
+                        $scope.documents.filenames[obj.documentIndex].references.splice(obj.referenceIndex, 1);
+                        //$scope.documents.filenames[obj.documentIndex].references = _.without($scope.documents.filenames[obj.documentIndex].references)
+                    });
                 }
             }
         });

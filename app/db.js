@@ -63,6 +63,17 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
         })
     });
 
+    referenceSchema.pre("remove", function(next){
+        Models.subSection.update({"filenames.name": this.filename}, {
+            $pull: {
+                "filenames.$.references": this._id          //remove all references with this id from any subSection
+            }
+        }, function(err){
+            if(err) winston.error(err);
+            next();
+        })
+    })
+
 
     /*subSectionSchema.pre("remove", function(next){
         _.each(this.filenames, function(filename){

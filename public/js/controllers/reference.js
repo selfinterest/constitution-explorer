@@ -7,6 +7,11 @@
  */
 angular.module("ReferenceController", [])
     .controller("ReferenceCtrl", ["$scope", "wire", "$routeParams", "navMenuService", "$q", "$http", "$timeout", "$location", function($scope, wire, $routeParams, navMenu, Q, $http, $timeout, $location){
+
+        function relocate() {
+            $location.path("/" + $scope.sectionName + "/" + $scope.subSectionName);
+        }
+
         $scope.wire = wire.getInstance({
             entity: $scope,
             collection: "reference",
@@ -14,10 +19,13 @@ angular.module("ReferenceController", [])
             init: false,
             callbacks: {
                 put: function(data){
-                    $location.path("/"+$scope.sectionName + "/" + $scope.subSectionName);
+                    relocate();
                 },
                 post: function(){
-                    $location.path("/"+$scope.sectionName + "/" + $scope.subSectionName);
+                    relocate();
+                },
+                delete: function(){
+                    relocate();
                 }
             }
         });
@@ -73,17 +81,14 @@ angular.module("ReferenceController", [])
 
             if($scope.referenceId == "_null"){
                 $scope.wire.put(data);
-                /*$http.put("/api/references", data)
-                    .success(function(reference){
-                        $location.path("/"+$scope.sectionName + "/" + $scope.subSectionName);
-                    })*/
             } else {
-                /*$http.post("/api/references/"+$scope.referenceId, data)
-                    .success(function(reference){
-                        $location.path("/"+$scope.sectionName + "/" + $scope.subSectionName);
-                    })*/
                 $scope.wire.post(data);
             }
+        }
+
+        $scope.delete = function(){
+            var data = {reference: $scope.reference, sectionName: $scope.sectionName, subSectionName: $scope.subSectionName, subSectionId: $scope.subSectionId};
+            $scope.wire.delete(data);
         }
 
         $scope.$on("$destroy", function(){

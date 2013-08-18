@@ -4,7 +4,7 @@ angular.module("services", [])
 /** @service
  *  Represents a wire that connects a controller, a service, and the server-side socket infrastructure, all wrapped up in a REST-like API.
  */
-    .service("wire", ["socket", "$q", function(socket, Q){
+    .service("wire", ["socket", "$q", "$log", function(socket, Q, $log){
 
 
         function Wire(options, room){
@@ -53,6 +53,9 @@ angular.module("services", [])
             this.putEvent = this.socketPrefix + ":" + "put";
             this.deleteEvent = this.socketPrefix + ":" + "delete";
             this.postEvent = this.socketPrefix + ":" + "post";
+
+            /* An error event */
+            this.errorEvent = this.socketPrefix + ":" + "error";
 
             this.getCb = null;
             this.putCb = null;
@@ -105,6 +108,10 @@ angular.module("services", [])
                 if(my.after) Q.when(promise).then(my.after(data, "delete"));
             })
 
+            socket.on(this.errorEvent, function(data){
+                $log.error(data);
+            });
+
             socket.on("subscribe", function(data){
                 if(my.subscribeDeferred){
                     my.subscribeDeferred.resolve(data);
@@ -143,6 +150,7 @@ angular.module("services", [])
             socket.removeListener(this.putEvent);
             socket.removeListener(this.deleteEvent);
             socket.removeListener(this.postEvent);
+            socket.removeListener(this.errorEvent);
         }
 
         Wire.prototype.subscribe = function(room){
@@ -216,20 +224,6 @@ angular.module("services", [])
             collection: "filenames"
         });
 
-        /*service.filenames = [];
-
-        service.get = function(sectionName, itemName){
-            service.filenames = [];
-            socket.emit("documents:get", {sectionName: sectionName, itemName: itemName});
-        }
-
-        service.put = function(sectionName, itemName, document){
-            socket.emit("documents:put", {sectionName: sectionName, itemName: itemName, document: document});
-        }
-
-        service.delete = function(setionName, itemName, document){
-            socket.emit("documents:delete", {sectionName: sectionName, itemName: itemName, document: document});
-        }*/
 
         return service;
 

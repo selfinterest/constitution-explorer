@@ -70,6 +70,7 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
 
             var auth = require("express.io").basicAuth(function(user, pass, callback) {
                 var result = (user === 'charter12' && pass === 'scottreid!');
+                //result = true;              //REMOVE THIS WHEN DEPLOYED!
                 callback(null /* error */, result);
             });
 
@@ -324,11 +325,31 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
                     var subSectionId = req.data.subSectionId;
                     var referenceId = reference._id;
                     delete reference._id;
+
                     db.Models.reference.findByIdAndUpdate(referenceId, reference, function(err, reference){
                         console.log(err);
                         req.io.emit("reference:post", reference);
                         app.io.room("/"+sectionName + "/" + subSectionName).broadcast("reference:post", reference);
                         //res.send(reference);
+                    });
+                },
+                delete: function(req){
+                    var sectionName = req.data.sectionName;
+                    var subSectionName = req.data.subSectionName;
+                    var reference = req.data.reference;
+                    var subSectionId = req.data.subSectionId;
+                    var referenceId = reference._id;
+
+                    db.Models.reference.findById(referenceId, function(err, model){
+                        if(err) req.io.emit("reference:error", err);
+                        if(model){
+                            model.remove(function(){
+                                req.io.emit("reference:delete", reference);
+                                app.io.room("/"+sectionName + "/" + subSectionName).broadcast("reference:delete", reference);
+                            })
+                        } else {
+
+                        }
                     });
                 }
             });
