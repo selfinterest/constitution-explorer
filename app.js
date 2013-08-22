@@ -20,9 +20,7 @@ requirejs.config({
 requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections", "app/api/references", "app/api/search", "underscore"], function(winston, async, http, express, db, sections, references, search, _){
     winston.info("Bootstrapping application.");
 
-    //Create a default user
-    //var user = new db.Models.user({name: "charter13", password: "!scottreid"});
-    //user.save();
+    
     /**
      * Command line options and main application variable
      */
