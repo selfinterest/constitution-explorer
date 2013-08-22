@@ -33,15 +33,10 @@ angular.module("DocumentsController", [])
                         $scope.documents.filenames[obj.documentIndex].references[obj.referenceIndex] = data;
 
                     })
-                    /*var __ret = findReferenceAndDoSomething();
-                    var index = __ret.index;
-                    var i = __ret.i;
-                    $scope.documents.filenames[index].references[i] = data;*/
                 },
                 delete: function(data){
                     findReferenceAndDoSomething(data, function(obj){
                         $scope.documents.filenames[obj.documentIndex].references.splice(obj.referenceIndex, 1);
-                        //$scope.documents.filenames[obj.documentIndex].references = _.without($scope.documents.filenames[obj.documentIndex].references)
                     });
                 }
             }

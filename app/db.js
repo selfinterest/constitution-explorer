@@ -500,7 +500,10 @@ define(["mongoose", "winston", "q", "underscore"], function(mongoose, winston, Q
         this.findById(subSectionId)
             .populate({path: "filenames.references"})
             .exec(function(err, subSection){
-                deferred.resolve(subSection.filenames);
+                if(subSection.filenames){
+                    deferred.resolve(subSection.filenames);
+                }
+
             });
         /*Models.section.findOne({name: sectionName})
             .populate({path: "subSections", model: Models.subSection, select: {"filenames.references": false}})
