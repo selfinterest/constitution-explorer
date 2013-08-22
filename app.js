@@ -19,6 +19,10 @@ requirejs.config({
 /* Bootstraps the application */
 requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections", "app/api/references", "app/api/search", "underscore"], function(winston, async, http, express, db, sections, references, search, _){
     winston.info("Bootstrapping application.");
+
+    //Create a default user
+    //var user = new db.Models.user({name: "charter13", password: "!scottreid"});
+    //user.save();
     /**
      * Command line options and main application variable
      */
@@ -69,9 +73,27 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
             /* Configure authorization */
 
             var auth = require("express.io").basicAuth(function(user, pass, callback) {
-                var result = (user === 'charter12' && pass === 'scottreid!');
+
+                try {
+                    db.Models.user.findOne({name: user}, function(err, user){
+                        if(err) throw new Error(err);
+                        if(user){
+                            user.comparePassword(pass, function(err, isMatch){
+                                if(err) throw new Error(err);
+                                callback(null, isMatch);
+                            })
+                        } else {
+                            callback(null, false);
+                        }
+                    });
+                } catch (e){
+                    winston.error(e);
+                    callback(null, false);
+                }
+
+                //var result = (user === 'charter12' && pass === 'scottreid!');
                 //result = true;              //REMOVE THIS WHEN DEPLOYED!
-                callback(null /* error */, result);
+                //callback(null /* error */, result);
             });
 
             /* Configure routing */
@@ -450,7 +472,6 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
 
             callback();
         }
-
 
     ])
 });
