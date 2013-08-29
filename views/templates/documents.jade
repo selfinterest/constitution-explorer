@@ -13,5 +13,5 @@ div(ng-show='documents.filenames.length > 0')
             td.span8: a(ng-href="http://www.primarydocuments.ca/documents/{{item.name}}", target="_blank") {{item.title}}
             td
                 ul
-                    li(ng-repeat="reference in item.references"): a(ng-href="/{{sectionName}}/{{subSectionName}}/{{item.name}}/{{reference._id}}") {{reference.full}}
-            td.icons.span1: a(ng-href="/{{sectionName}}/{{subSectionName}}/{{item.name}}").icon-plus
+                    li(ng-repeat="reference in item.references"): a(ng-href="/editor/{{sectionName}}/{{subSectionName}}/{{item.name}}/{{reference._id}}") {{reference.full}}
+            td.icons.span1: a(ng-href="/editor/{{sectionName}}/{{subSectionName}}/{{item.name}}").icon-plus

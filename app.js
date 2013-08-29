@@ -20,7 +20,7 @@ requirejs.config({
 requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections", "app/api/references", "app/api/search", "underscore"], function(winston, async, http, express, db, sections, references, search, _){
     winston.info("Bootstrapping application.");
 
-    
+
     /**
      * Command line options and main application variable
      */

@@ -9,7 +9,7 @@ angular.module("ReferenceController", [])
     .controller("ReferenceCtrl", ["$scope", "wire", "$routeParams", "navMenuService", "$q", "$http", "$timeout", "$location", function($scope, wire, $routeParams, navMenu, Q, $http, $timeout, $location){
 
         function relocate() {
-            $location.path("/" + $scope.sectionName + "/" + $scope.subSectionName);
+            $location.path("/editor/" + $scope.sectionName + "/" + $scope.subSectionName);
         }
 
         $scope.wire = wire.getInstance({
