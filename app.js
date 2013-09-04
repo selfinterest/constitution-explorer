@@ -17,7 +17,7 @@ requirejs.config({
 });
 
 /* Bootstraps the application */
-requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections", "app/api/references", "app/api/search", "underscore"], function(winston, async, http, express, db, sections, references, search, _){
+requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections", "app/api/references", "app/api/search", "underscore", "passport"], function(winston, async, http, express, db, sections, references, search, _, passport){
     winston.info("Bootstrapping application.");
 
 
@@ -27,6 +27,8 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
     var commandLn, app = express();
     var RedisStore = require('connect-redis')(express);
     var redis = require("redis").createClient();
+
+    
 
     async.series([
         /**
@@ -62,41 +64,66 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
             //app.use(express.session());
             //app.use(express.csrf());
             app.use(express.static('./public', { maxAge: 0 }));
+            app.use(passport.initialize());
+            app.use(passport.session());
             app.use(app.router);
 
             app.configure('development', function(){
                 app.use(express.errorHandler());
             });
 
+            var BasicStrategy = require('passport-http').BasicStrategy;
+            passport.use(new BasicStrategy(
+                function(user, pass, callback){
+                    try {
+                        db.Models.user.findOne({name: user}, function(err, user){
+                            if(err) return callback(err);
+                            if(!user) return callback(null, false);
+                            return user.comparePassword(pass, function(err, isMatch){
+                                if(err) return callback(err);
+                                if(!isMatch) return callback(null, false);
+                                return callback(null, user);
+                            });
+                        });
+                    } catch (e){
+                        winston.error(e);
+                        callback(null, false);
+                    }
+                }
+            ));
+
+            passport.serializeUser = function(user, done){
+                done(null, {name: user.name, admin: user.admin});
+                //done(null, })
+            };
+
+            passport.deserializeUser = function(user, done){
+                db.Models.user.findOne({name: user.name}, function(err, user){
+                    done(err, user);
+                });
+            }
+
             /* Configure authorization */
 
             var auth = require("express.io").basicAuth(function(user, pass, callback) {
 
-                try {
-                    db.Models.user.findOne({name: user}, function(err, user){
-                        if(err) throw new Error(err);
-                        if(user){
-                            user.comparePassword(pass, function(err, isMatch){
-                                if(err) throw new Error(err);
-                                callback(null, isMatch);
-                            })
-                        } else {
-                            callback(null, false);
-                        }
-                    });
-                } catch (e){
-                    winston.error(e);
-                    callback(null, false);
-                }
+
 
                 //var result = (user === 'charter12' && pass === 'scottreid!');
                 //result = true;              //REMOVE THIS WHEN DEPLOYED!
                 //callback(null /* error */, result);
             });
 
+            app.all("*", function(req, res, next){
+
+                next();
+                /*if(req.remoteUser){
+
+                }*/
+            });
             /* Configure routing */
 
-            app.all("*", auth);
+            app.all("*", passport.authenticate('basic', {session: true}));
 
             app.get("/templates/:template", function(req, res){
                 var template = req.params.template;
@@ -125,7 +152,9 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
 
             app.post("/api/search", search.get);
             app.get("*", function(req, res){
-                res.render("index");
+                res.render("index", {
+                    admin: req.user.admin
+                });
                 //res.send("Ok");
             });
 

@@ -1,12 +1,11 @@
-angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "services", "controllers", "filters", "ui-router"])
+angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "services", "controllers", "filters"])
     .config(["$locationProvider", "$routeProvider", function($locationProvider, $routeProvider){
         $locationProvider.html5Mode(true);
         $locationProvider.hashPrefix("!");
         $routeProvider
             .when("/editor/:sectionName/:subSectionName", {
                 templateUrl: '/templates/index',
-                controller: "IndexCtrl",
-                reloadOnSearch: true
+                controller: "IndexCtrl"
             })
             .when("/editor/:sectionName/:subSectionName/:filename/:referenceId", {
                 templateUrl: "/templates/referenceView",
@@ -17,16 +16,28 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                 controller: "ReferenceCtrl"
             })
             .when("/editor", {
-                templateUrl: "/templates/empty"
+                templateUrl: "/templates/empty",
+                controller: "IndexCtrl"
+            })
+            .when("/viewer", {
+                template: "<h1>Viewer</h1>"
+            })
+            .when("/users", {
+                template: "<h1>Users</h1>"
             })
             .otherwise({
                 redirectTo: "/editor"
             })
     }])
-    .run(["$rootScope", "navMenuService", function($rootScope, navMenu){
-        /*$rootScope.$on("$routeChangeSuccess", function(){
-            navMenu.updateLocation();
-        })*/
+    .run(["$rootScope", "$location", "navMenuService", "user", function($rootScope, $location, navMenu, user){
+        $rootScope.$on("$routeChangeSuccess", function(){
+            var locationParts = $location.path().split("/");
+            if(locationParts.length > 0){
+                $rootScope.activeRoute = locationParts[1];
+            }
+            $rootScope.user = user;
+            //navMenu.updateLocation();
+        })
     }])
 
 
@@ -68,7 +79,7 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                                 parent.append(clone);
                                 var orderStr = "orderBy: 'item.name''";
                                 var html =
-                                    "<li ng-repeat=\"item in items | orderBy:'name'\" ng-class='{active: item._id == menu.activeId}'><a ng-href='/editor/{{ section.name }}/{{ item.name }}' ng-show='!item.editing'>{{ item.name }}<span class='pull-right icons'><i class='icon-pencil' ng-click='editItem(item, section)'></i><i class='icon-remove' ng-click='subSectionWire.delete({sectionName: section.name, subSection: item})'></i></span></a><form ng-show='item.editing' class='input-append'><input type='text' class='input-small' ng-model='item.newName'><button class='btn' ng-click='subSectionWire.post({sectionName: section.name, subSection: item})'>Submit</button></form></li>";
+                                    "<li ng-repeat=\"item in items | orderBy:'name'\" ng-class='{active: item._id == menu.activeId}'><a ng-href='/editor/{{ section.name }}/{{ item.name }}' ng-click='menu.activeId = item._id' ng-show='!item.editing'>{{ item.name }}<span class='pull-right icons'><i class='icon-pencil' ng-click='editItem(item, section)'></i><i class='icon-remove' ng-show='user.admin' ng-click='subSectionWire.delete({sectionName: section.name, subSection: item})'></i></span></a><form ng-show='item.editing' class='input-append'><input type='text' class='input-small' ng-model='item.newName'><button class='btn' ng-click='subSectionWire.post({sectionName: section.name, subSection: item})'>Submit</button></form></li>";
                                 html +=
                                     "<li class='input-append'><form><label>Add section</label><input type='text' ng-model='section.newItem' class='input-small'><button class='btn' ng-click='subSectionWire.put({sectionName: section.name, subSectionName: section.newItem})' ng-disabled='!section.newItem'>Submit</button></form></li>";
                                 //clone.after($compile(html)($childScope));

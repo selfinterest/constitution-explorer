@@ -19,18 +19,19 @@ angular.module("NavController", [])
             callbacks: {
                 get: function(data){
                     $scope.connection = {on: true};
+                    navMenu.updateLocation();
                 },
                 put: function(data){
                     navMenu.parts.sections.push(data.name);
                     $scope.newSection = "";
                 },
                 after: function(data, method){          //after a socket event, we update location
-                    if(method == "get"){
+                    /*if(method == "get"){
                         navMenu.updateLocation();
                         $scope.$on("$routeChangeSuccess", function(){
                             navMenu.updateLocation();
                         })
-                    }
+                    }*/
                 }
             }
         })
@@ -107,8 +108,8 @@ angular.module("NavController", [])
         }
 
         $scope.$on("$destroy", function(){
-            navMenu.wire.removeListeners();
-            $scope.subSectionWire.removeListeners();
+            if(angular.isDefined(navMenu.wire)) navMenu.wire.removeListeners();
+            if(angular.isDefined(navMenu.subSectionWire)) $scope.subSectionWire.removeListeners();
         })
 
 

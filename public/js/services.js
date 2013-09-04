@@ -20,6 +20,7 @@ angular.module("services", [])
             }
 
 
+
             function serviceCollection(){
                 return my.service[my.collection];
             }
@@ -44,7 +45,7 @@ angular.module("services", [])
              * @type String
              */
             this.socketPrefix = options.socketPrefix;
-
+            $log.info("Opening wire with prefix: "+this.socketPrefix);
 
             this.init = angular.isDefined(options.init) ? options.init : false;
 
@@ -281,6 +282,7 @@ angular.module("services", [])
                 service.findSubsectionAndDoSomething(sectionName, {name: subSectionName}, function(section, subSection, index){
                     //$rootScope.$apply(function(){
                         service.activeId = subSection._id;
+                        service.activeSection = section;
                         service.deferred.resolve(service.activeId);
                     //})
 

@@ -12,7 +12,8 @@ define(["mongoose", "winston", "q", "underscore", "bcrypt"], function(mongoose, 
 
     var userSchema = new Schema({
         name: {type: String, required: true, index: {unique: true}},
-        password: {type: String, required: true }
+        password: {type: String, required: true },
+        admin: {type: Boolean, default: false}
     });
 
     userSchema.pre("save", function(next){
@@ -529,7 +530,7 @@ define(["mongoose", "winston", "q", "underscore", "bcrypt"], function(mongoose, 
 
     subSectionSchema.statics.getAllDocuments = function(sectionName, subSectionName, subSectionId){
         var deferred = Q.defer();
-
+        winston.info("Finding subsection: "+subSectionId);
         this.findById(subSectionId)
             .populate({path: "filenames.references"})
             .exec(function(err, subSection){

@@ -17,16 +17,25 @@ html(lang="en", ng-app="ConstitutionExplorer")
         != js("controllers.js")
         != js("filters.js")
         != js("main.js")
+        script.
+            angular.module("ConstitutionExplorer").value("user", {admin: '#{admin}'});
     body
-        div.container-fluid
-            div.row-fluid
+        div.navbar
+            div.navbar-inner
+                a(href="/").brand PrimaryDocuments.ca - Constitution Explorer
+                ul.nav
+                    li(ng-class="{'active': activeRoute == 'editor'}"): a(href="/editor" ) Editor
+                    li(ng-class="{'active': activeRoute == 'viewer'}"): a(href="/viewer") Viewer
+                    li(ng-class="{'active': activeRoute == 'users'}"): a(href="/users") Users
+        div(ng-switch on="activeRoute").container-fluid
+            div(ng-switch-when='editor').row-fluid
                 div(ng-controller="NavCtrl").span2.well
                     span(ng-show="!connection.on") Socket NOT connected
                     ul.nav.nav-list
                         li(nav-menu2).nav-header
                             span.pull-right.icons
                                 i(ng-click="menu.minimizeSection(section)").icon-minus
-                                i(ng-click="wire.delete(section)").icon-remove
+                                i(ng-click="wire.delete(section)", ng-show="user.admin").icon-remove
                             | {{section.name}}
                     div.input-append
                         form
@@ -36,5 +45,7 @@ html(lang="en", ng-app="ConstitutionExplorer")
                 div.span10
                     div(ng-view).border-bottom
                     div(ng-include src="'/templates/finder'", ng-controller="FinderCtrl", ng-show="menu.activeId")
+            div(ng-switch-when='viewer').row-fluid
+                div(ng-view)
 
 
