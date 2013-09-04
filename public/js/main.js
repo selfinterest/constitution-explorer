@@ -20,7 +20,8 @@ angular.module("ConstitutionExplorer", ["ui.bootstrap", "btford.socket-io", "ser
                 controller: "IndexCtrl"
             })
             .when("/viewer", {
-                template: "<h1>Viewer</h1>"
+                templateUrl: "/templates/viewer",
+                controller: "ViewerCtrl"
             })
             .when("/users", {
                 template: "<h1>Users</h1>"

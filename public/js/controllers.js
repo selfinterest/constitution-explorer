@@ -6,4 +6,4 @@
  * To change this template use File | Settings | File Templates.
  */
 //= require_tree controllers
-angular.module("controllers", ["NavController", "IndexController", "ReferenceController", "FinderController", "DocumentsController"]);
+angular.module("controllers", ["NavController", "IndexController", "ReferenceController", "FinderController", "DocumentsController", "ViewerController"]);

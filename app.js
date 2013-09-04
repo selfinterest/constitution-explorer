@@ -17,7 +17,7 @@ requirejs.config({
 });
 
 /* Bootstraps the application */
-requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections", "app/api/references", "app/api/search", "underscore", "passport"], function(winston, async, http, express, db, sections, references, search, _, passport){
+requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections", "app/api/references", "app/api/search", "app/api/viewer", "underscore", "passport"], function(winston, async, http, express, db, sections, references, search, viewer, _, passport){
     winston.info("Bootstrapping application.");
 
 
@@ -28,7 +28,7 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
     var RedisStore = require('connect-redis')(express);
     var redis = require("redis").createClient();
 
-    
+
 
     async.series([
         /**
@@ -147,6 +147,7 @@ requirejs(["winston", "async", "http", "express.io", "app/db", "app/api/sections
             app.get("/api/references/:referenceId", references.get);
             app.put("/api/references", references.put);
             app.post("/api/references/:referenceId", references.post);
+            app.get("/api/viewer", viewer.get)
             //app.get("/api/references/:part/:section", references.get);
             //app.put("/api/references/:part/:section/:filename", references.put);
 

@@ -1,0 +1,8 @@
+div.row-fluid
+    h1 Viewer
+    div(ng-repeat="section in data.sectionStrings").span12
+        h5(ng-show='data.references[section].length > 0') {{section}}
+        ul(ng-show='data.references[section].length > 0').well.span6
+            li(ng-repeat="reference in data.references[section]")
+                img(ng-src='http://www.primarydocuments.ca/java/images2/thumbnail/by-name/{{reference.filename}}.pdf/0')
+                a(ng-href='http://www.primarydocuments.ca/documents/{{reference.filename}}') {{reference.full}}
