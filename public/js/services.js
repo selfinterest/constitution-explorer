@@ -1,5 +1,82 @@
 //= require_tree services
 angular.module("services", [])
+  .service("promiseWire", ["socket", "$q", "$log", function(socket, Q, $log){
+    function Wire(options){
+      var my = this;
+      my.socketPrefix = options.socketPrefix;
+
+      my.getEvent = this.socketPrefix + ":get";
+      my.putEvent = this.socketPrefix + ":put";
+      my.postEvent = this.socketPrefix + ":post";
+      my.deleteEvent = this.socketPrefix + ":delete";
+
+      my.deferred = {};
+      my.deferred.get = Q.defer();
+      my.deferred.put = Q.defer();
+      my.deferred.post = Q.defer();
+      my.deferred.delete = Q.defer();
+
+      my.promises = {};
+      my.promises.get = my.deferred.get.promise;
+      my.promises.put = my.deferred.put.promise;
+      my.promises.post = my.deferred.post.promise;
+      my.promises.delete = my.deferred.delete.promise;
+
+      function resetPromise(which){
+        my.deferred[which] = Q.defer();
+        my.promises[which] = my.deferred[which].promise;
+      }
+
+      socket.on(this.getEvent, function(data){
+        my.deferred.get.resolve(data);
+        resetPromise("get");
+      })
+
+      socket.on(this.putEvent, function(data){
+        my.deferred.put.resolve(data);
+        resetPromise("put");
+      })
+
+      socket.on(this.postEvent, function(data){
+        my.deferred.post.resolve(data);
+        resetPromise("post");
+      })
+
+      socket.on(this.deleteEvent, function(data){
+        my.deferred.delete.resolve(data);
+        resetPromise("delete");
+      })
+
+
+
+    }
+
+    Wire.prototype.get = function(data){
+      if(!angular.isDefined(data)) data = {};
+      socket.emit(this.getEvent, data);
+    }
+
+    Wire.prototype.put = function(data){
+      if(!angular.isDefined(data)) data = {};
+      socket.emit(this.putEvent, data);
+    }
+
+    Wire.prototype.post = function(data){
+      if(!angular.isDefined(data)) data = {};
+      socket.emit(this.postEvent, data);
+    }
+
+    Wire.prototype.delete = function(data){
+      if(!angular.isDefined(data)) data = {};
+      socket.emit(this.deleteEvent, data);
+    }
+
+    return {
+      getInstance: function(options){
+        return new Wire(options);
+      }
+    }
+  }])
 
 /** @service
  *  Represents a wire that connects a controller, a service, and the server-side socket infrastructure, all wrapped up in a REST-like API.

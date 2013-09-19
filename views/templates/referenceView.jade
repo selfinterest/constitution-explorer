@@ -36,7 +36,7 @@ div
                     button(ng-click="open()").btn: i.icon-calendar
     div.form-actions
         div.btn-group
-            button(type="submit", ng-click="submit()").btn.btn-primary.input-medium Submit
+            button(type="submit", ng-click="submit()", ng-disabled="referenceForm.$invalid").btn.btn-primary.input-medium Submit
             a(ng-href="/{{sectionName}}/{{subSectionName}}").btn Cancel
         button(ng-click="delete()", ng-show="referenceId != '_null'").btn.btn-danger.offset7
             i.icon-remove.icon-white

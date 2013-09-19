@@ -70,6 +70,7 @@ define(["mongoose", "winston", "q", "underscore", "bcrypt"], function(mongoose, 
 
     var subSectionSchema = new Schema({
         name: {type: String},
+        displayName: {type: String},
         filenames: [filenameSchema]
     });
 

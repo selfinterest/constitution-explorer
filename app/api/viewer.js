@@ -26,7 +26,8 @@ define(["winston", "app/db", "async", "q"], function(winston, db, async, Q){
     }
 
     function sectionString(sectionName, subsectionName){
-        return sectionName + " " + subsectionName;
+        return subsectionName;
+        //return sectionName + " " + subsectionName;
     }
 
     return {

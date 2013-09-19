@@ -2,7 +2,10 @@ div.row-fluid
     h1 Viewer
     div(ng-repeat="section in data.sectionStrings").span12
         h5(ng-show='data.references[section].length > 0') {{section}}
-        ul(ng-show='data.references[section].length > 0').well.span6
-            li(ng-repeat="reference in data.references[section]")
+        div(ng-repeat="reference in data.references[section]").date-display-iten
+            div.date-display-document
                 img(ng-src='http://www.primarydocuments.ca/java/images2/thumbnail/by-name/{{reference.filename}}.pdf/0')
+            div.date-display-pdf
+                a(ng-href='http://www/primarydocuments.ca/api/pdf/{{reference.filename}}.pdf'): img(src="/img/pdf_button.png")
+            div.date-display-content
                 a(ng-href='http://www.primarydocuments.ca/documents/{{reference.filename}}') {{reference.full}}
