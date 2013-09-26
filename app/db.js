@@ -535,8 +535,15 @@ define(["mongoose", "winston", "q", "underscore", "bcrypt"], function(mongoose, 
         this.findById(subSectionId)
             .populate({path: "filenames.references"})
             .exec(function(err, subSection){
-                if(subSection.filenames){
+              if(err) winston.error(err);
+              if(subSection){
+                  if(subSection.filenames){
                     deferred.resolve(subSection.filenames);
+                  } else {
+                    deferred.resolve([]);
+                  }
+                } else {
+                  deferred.resolve([]);
                 }
 
             });
